@@ -11,6 +11,7 @@ WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"
 # Словарь для хранения выбранных городов пользователей
 user_cities = {}
 user_authorized = {}
+job_store = {}
 
 # Настройка логирования
 logging.basicConfig(
@@ -78,6 +79,14 @@ async def handle_button_click(update: Update, context: ContextTypes.DEFAULT_TYPE
 
     if text == "Далее":
         user_authorized[user_id] = True
+        
+        # Запуск периодического задания для отправки погоды
+        job_queue = context.job_queue
+        if user_id in job_store:
+            job_store[user_id].schedule_removal()
+        job = job_queue.run_repeating(send_weather, interval=7200, first=10, context={'user_id': user_id})
+        job_store[user_id] = job
+
         keyboard = [
             [KeyboardButton("Мой город"), KeyboardButton("Изменить город")]
         ]
@@ -129,7 +138,7 @@ async def set_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Функция для автоматической отправки погоды каждые 2 часа с улучшенной обработкой ошибок
 async def send_weather(context: ContextTypes.DEFAULT_TYPE):
     job = context.job
-    user_id = job.data['user_id']
+    user_id = job.context['user_id']
 
     if user_id in user_cities:
         city = user_cities[user_id]
@@ -157,9 +166,6 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_button_click))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_city_requests))
     application.add_handler(MessageHandler(filters.TEXT, set_city))
-
-    # Замените 123456789 на действительный ID пользователя
-    job_queue.run_repeating(send_weather, interval=7200, first=10, data={'user_id': 123456789})
 
     application.run_polling()
 
