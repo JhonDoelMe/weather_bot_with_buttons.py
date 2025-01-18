@@ -1,5 +1,6 @@
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from googletrans import Translator
 import requests
 import logging
 
@@ -14,12 +15,18 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Инициализация переводчика
+translator = Translator()
+
 # Функция для получения погоды с OpenWeatherMap API
 def get_weather(city):
     if not city:
         return "Название города не может быть пустым."
     
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric&lang=ru"
+    # Перевод названия города на английский язык
+    translated_city = translator.translate(city, dest='en').text
+    
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={translated_city}&appid={WEATHER_API_KEY}&units=metric&lang=ru"
     
     response = requests.get(url)
     if response.status_code == 200:
@@ -37,19 +44,14 @@ def get_weather(city):
 # Функция для обработки команд /start
 async def start(update: Update, context):
     logger.info(f"Команда /start получена от пользователя {update.effective_user.id}")
-    await update.message.reply_text("Привет! Я бот для получения погоды. Используй команду /weather <город>, чтобы узнать погоду. 😃")
+    await update.message.reply_text("Привет! Я бот для получения погоды. Просто введи название города на любом языке, чтобы узнать погоду. 😃")
 
-# Функция для обработки команд /weather
-async def weather(update: Update, context):
-    logger.info(f"Команда /weather получена от пользователя {update.effective_user.id}")
-    city = " ".join(context.args)
+# Функция для обработки текстовых сообщений и выдачи прогноза погоды
+async def get_weather_update(update: Update, context):
+    logger.info(f"Получено сообщение от пользователя {update.effective_user.id}")
+    city = update.message.text
     weather_info = get_weather(city)
     await update.message.reply_text(weather_info + " 😃")
-
-# Функция для обработки текстовых сообщений
-async def echo(update: Update, context):
-    logger.info(f"Получено сообщение от пользователя {update.effective_user.id}")
-    await update.message.reply_text(update.message.text + " 😃")
 
 def main():
     # Создание бота и добавление обработчиков
@@ -58,11 +60,8 @@ def main():
     # Обработчик команд /start
     application.add_handler(CommandHandler("start", start))
     
-    # Обработчик команд /weather
-    application.add_handler(CommandHandler("weather", weather))
-    
-    # Обработчик текстовых сообщений
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+    # Обработчик текстовых сообщений и команд
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, get_weather_update))
     
     # Запуск бота
     application.run_polling()
