@@ -109,4 +109,20 @@ async def set_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Ваш город установлен: {city}.\n\n{weather_info}"
         )
     else:
-        await update.message.reply_text(f"Не удалось получить погоду для города: {city}. Проверьте правильность написания."
+        await update.message.reply_text(f"Не удалось получить погоду для города: {city}. Проверьте правильность написания.")
+
+# Основная функция
+def main():
+    # Создаём приложение
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
+
+    # Обработчики
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_button_click))
+    application.add_handler(MessageHandler(filters.TEXT, set_city))
+
+    # Запуск бота
+    application.run_polling()
+
+if __name__ == '__main__':
+    main()
