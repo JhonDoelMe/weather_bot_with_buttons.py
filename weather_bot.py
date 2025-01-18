@@ -7,8 +7,11 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, J
 from telegram.error import TimedOut
 from dotenv import load_dotenv
 from cachetools import TTLCache
+from aiohttp import ClientError, ServerTimeoutError
 
 # Загрузка переменных окружения из файла .env
+if not os.path.isfile('.env'):
+    raise FileNotFoundError("Файл .env не найден. Убедитесь, что файл .env присутствует в корне проекта.")
 load_dotenv()
 
 # Получение токенов из переменных окружения
@@ -85,8 +88,8 @@ async def get_weather(city):
                     return "Город не найден. Проверьте правильность ввода."
                 else:
                     return "Не удалось получить данные о погоде."
-    except asyncio.TimeoutError:
-        logger.error("Ошибка таймаута при получении данных о погоде.")
+    except (asyncio.TimeoutError, ClientError, ServerTimeoutError) as e:
+        logger.error(f"Ошибка при получении данных о погоде: {e}")
         return "Произошла ошибка при получении данных о погоде. Попробуйте снова позже."
 
 # Асинхронная функция для отправки сообщений с повторными попытками
