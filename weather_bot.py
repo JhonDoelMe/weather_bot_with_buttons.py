@@ -2,7 +2,6 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, JobQueue
 import requests
 import logging
-from datetime import time
 
 # Вставьте свои токены
 TELEGRAM_TOKEN = "7533343666:AAFtXtHra2C5C_Wgl_tMs-m04plqjWItCzI"
@@ -73,8 +72,12 @@ async def get_weather_update(update: Update, context):
     logger.info(f"Получено сообщение от пользователя {update.effective_user.id}")
     city = update.message.text
     context.user_data['city'] = city  # Сохраним город для обновлений
+    context.user_data['chat_id'] = update.effective_chat.id  # Сохраним chat_id для обновлений
     weather_info = get_weather(city)
     await update.message.reply_text(weather_info)
+
+    # Настроим автоматическое обновление прогноза
+    context.job_queue.run_repeating(send_weather_update, interval=7200, first=0, context=context.user_data)
 
 # Функция для отправки обновленного прогноза погоды
 async def send_weather_update(context):
@@ -83,13 +86,6 @@ async def send_weather_update(context):
     chat_id = job.context['chat_id']
     weather_info = get_weather(city)
     await context.bot.send_message(chat_id, text=weather_info)
-
-# Функция для настройки автоматического обновления прогноза каждые 2 часа
-def set_weather_updates(context):
-    job_queue = context.job_queue
-    chat_id = context.job.context['chat_id']
-    city = context.job.context['city']
-    job_queue.run_repeating(send_weather_update, interval=7200, first=0, context={'chat_id': chat_id, 'city': city})
 
 def main():
     # Создание бота и добавление обработчиков
@@ -101,9 +97,6 @@ def main():
     # Обработчик текстовых сообщений и команд
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, get_weather_update))
     
-    # Настройка автоматических обновлений прогноза каждые 2 часа
-    application.job_queue.run_once(set_weather_updates, when=time(hour=0, minute=0, second=0), context={'chat_id': 'YOUR_CHAT_ID', 'city': 'YOUR_CITY'})
-
     # Запуск бота
     application.run_polling()
 
