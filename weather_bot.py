@@ -113,17 +113,19 @@ async def set_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(f"Не удалось получить погоду для города: {city}. Проверьте правильность написания.")
 
 # Функция для автоматической отправки погоды каждые 2 часа
-async def send_weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.message.from_user.id
+async def send_weather(context: ContextTypes.DEFAULT_TYPE):
+    job = context.job
+    user_id = job.context['user_id']
+    
     if user_id in user_cities:
         city = user_cities[user_id]
         weather_info = get_weather(city)
         if weather_info:
-            await update.message.reply_text(f"Погода для города {city}:\n{weather_info}")
+            await context.bot.send_message(user_id, f"Погода для города {city}:\n{weather_info}")
         else:
-            await update.message.reply_text(f"Не удалось получить погоду для города: {city}.")
+            await context.bot.send_message(user_id, f"Не удалось получить погоду для города: {city}.")
     else:
-        await update.message.reply_text("Вы ещё не установили город. Нажмите 'Изменить город', чтобы установить его.")
+        await context.bot.send_message(user_id, "Вы ещё не установили город. Нажмите 'Изменить город', чтобы установить его.")
 
 # Основная функция
 def main():
@@ -139,7 +141,7 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT, set_city))
 
     # Устанавливаем периодическую задачу на 2 часа
-    job_queue.run_repeating(send_weather, interval=7200, first=10)
+    job_queue.run_repeating(send_weather, interval=7200, first=10, context={'user_id': 123456789})  # Замените 123456789 на ID пользователя
 
     # Запуск бота
     application.run_polling()
