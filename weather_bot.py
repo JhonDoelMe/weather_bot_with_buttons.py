@@ -115,7 +115,7 @@ async def set_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Функция для автоматической отправки погоды каждые 2 часа
 async def send_weather(context: ContextTypes.DEFAULT_TYPE):
     job = context.job
-    user_id = job.context['user_id']
+    user_id = job.data['user_id']
     
     if user_id in user_cities:
         city = user_cities[user_id]
@@ -141,7 +141,7 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT, set_city))
 
     # Устанавливаем периодическую задачу на 2 часа
-    job_queue.run_repeating(send_weather, interval=7200, first=10)
+    job_queue.run_repeating(send_weather, interval=7200, first=10, data={'user_id': 123456789})  # Замените 123456789 на ID пользователя
 
     # Запуск бота
     application.run_polling()
