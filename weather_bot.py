@@ -2,6 +2,7 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, JobQueue
 import requests
 import logging
+from telegram.error import BadRequest
 
 # Вставьте свои токены
 TELEGRAM_TOKEN = "7533343666:AAFtXtHra2C5C_Wgl_tMs-m04plqjWItCzI"
@@ -9,6 +10,13 @@ WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"
 
 # Словарь для хранения выбранных городов пользователей
 user_cities = {}
+
+# Настройка логирования
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
+logger = logging.getLogger(__name__)
 
 # Функция для получения погоды с OpenWeatherMap API
 def get_weather(city):
@@ -94,7 +102,7 @@ async def set_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
         f"Ваш город установлен: {city}.\n\n{weather_info}"
     )
 
-# Функция для автоматической отправки погоды каждые 2 часа
+# Функция для автоматической отправки погоды каждые 2 часа с улучшенной обработкой ошибок
 async def send_weather(context: ContextTypes.DEFAULT_TYPE):
     job = context.job
     user_id = job.data['user_id']
@@ -102,9 +110,15 @@ async def send_weather(context: ContextTypes.DEFAULT_TYPE):
     if user_id in user_cities:
         city = user_cities[user_id]
         weather_info = get_weather(city)
-        await context.bot.send_message(user_id, f"Погода для города {city}:\n{weather_info}")
+        try:
+            await context.bot.send_message(user_id, f"Погода для города {city}:\n{weather_info}")
+        except BadRequest as e:
+            logger.error(f"Не удалось отправить сообщение пользователю {user_id}: {e}")
     else:
-        await context.bot.send_message(user_id, "Вы ещё не установили город. Нажмите 'Изменить город', чтобы установить его.")
+        try:
+            await context.bot.send_message(user_id, "Вы ещё не установили город. Нажмите 'Изменить город', чтобы установить его.")
+        except BadRequest as e:
+            logger.error(f"Не удалось отправить сообщение пользователю {user_id}: {e}")
 
 # Основная функция
 def main():
@@ -115,6 +129,7 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_button_click))
     application.add_handler(MessageHandler(filters.TEXT, set_city))
 
+    # Замените 123456789 на действительный ID пользователя
     job_queue.run_repeating(send_weather, interval=7200, first=10, data={'user_id': 123456789})
 
     application.run_polling()
