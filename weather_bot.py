@@ -1,24 +1,10 @@
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, JobQueue
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
 import requests
-import logging
-from telegram.error import BadRequest
 
 # Вставьте свои токены
 TELEGRAM_TOKEN = "7533343666:AAFtXtHra2C5C_Wgl_tMs-m04plqjWItCzI"
 WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"
-
-# Словарь для хранения выбранных городов пользователей
-user_cities = {}
-user_authorized = {}
-job_store = {}
-
-# Настройка логирования
-logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',
-    level=logging.INFO
-)
-logger = logging.getLogger(__name__)
 
 # Функция для получения погоды с OpenWeatherMap API
 def get_weather(city):
@@ -36,9 +22,32 @@ def get_weather(city):
         humidity = data['main']['humidity']
         pressure = data['main']['pressure']
 
-        weather_emoji = {
-            "clear sky": "☀️",
-            "few clouds": "🌤",
-            "scattered clouds": "☁️",
-            "broken clouds": "☁️",
-            "shower rain": "🌧",
+        return f"Погода в {city}: {weather}, температура: {temp}°C, ощущается как: {feels_like}°C, влажность: {humidity}%, давление: {pressure} hPa."
+    else:
+        return "Не удалось получить данные о погоде."
+
+# Функция для обработки команд /weather
+async def weather(update: Update, context):
+    city = " ".join(context.args)
+    weather_info = get_weather(city)
+    await update.message.reply_text(weather_info + " 😃")
+
+# Функция для обработки текстовых сообщений
+async def echo(update: Update, context):
+    await update.message.reply_text(update.message.text + " 😃")
+
+def main():
+    # Создание бота и добавление обработчиков
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
+    
+    # Обработчик команд /weather
+    application.add_handler(CommandHandler("weather", weather))
+    
+    # Обработчик текстовых сообщений
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, echo))
+    
+    # Запуск бота
+    application.run_polling()
+
+if __name__ == "__main__":
+    main()
