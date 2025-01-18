@@ -11,7 +11,7 @@ WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"
 
 # Настройка логирования
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.ERROR  # Установите уровень логирования на ERROR
 )
 logger = logging.getLogger(__name__)
@@ -84,7 +84,8 @@ async def send_message_with_retries(bot, chat_id, text, retries=3, delay=5):
 # Функция для обработки команд /start
 async def start(update: Update, context):
     logger.error(f"Команда /start получена от пользователя {update.effective_user.id}")
-    await send_message_with_retries(update.message.bot, update.effective_chat.id, "Привет! Я бот для получения погоды. Просто введи название города на русском языке, чтобы узнать погоду. 😃")
+    bot = context.bot
+    await send_message_with_retries(bot, update.effective_chat.id, "Привет! Я бот для получения погоды. Просто введи название города на русском языке, чтобы узнать погоду. 😃")
 
 # Функция для обработки текстовых сообщений и выдачи прогноза погоды
 async def get_weather_update(update: Update, context):
@@ -93,10 +94,11 @@ async def get_weather_update(update: Update, context):
     context.user_data['city'] = city  # Сохраним город для обновлений
     context.user_data['chat_id'] = update.effective_chat.id  # Сохраним chat_id для обновлений
     weather_info = get_weather(city)
+    bot = context.bot
     
-    await send_message_with_retries(update.message.bot, update.effective_chat.id, weather_info)
+    await send_message_with_retries(bot, update.effective_chat.id, weather_info)
     # Уведомление о следующем обновлении прогноза
-    await send_message_with_retries(update.message.bot, update.effective_chat.id, "Следующее обновление прогноза через 2 часа. 🌦️")
+    await send_message_with_retries(bot, update.effective_chat.id, "Следующее обновление прогноза через 2 часа. 🌦️")
 
     # Настроим автоматическое обновление прогноза, избегая дублирования задач
     if 'job' in context.user_data:
@@ -110,7 +112,8 @@ async def send_weather_update(context):
     city = job.data['city']
     chat_id = job.data['chat_id']
     weather_info = get_weather(city)
-    await send_message_with_retries(context.bot, chat_id, weather_info)
+    bot = context.bot
+    await send_message_with_retries(bot, chat_id, weather_info)
 
 def main():
     # Создание бота и добавление обработчиков
