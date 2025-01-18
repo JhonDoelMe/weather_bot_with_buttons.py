@@ -2,6 +2,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, JobQueue
 import requests
 import logging
+from telegram.error import TimedOut
 
 # Вставьте свои токены
 TELEGRAM_TOKEN = "7533343666:AAFtXtHra2C5C_Wgl_tMs-m04plqjWItCzI"
@@ -90,8 +91,11 @@ async def send_weather_update(context):
     job = context.job
     city = job.data['city']
     chat_id = job.data['chat_id']
-    weather_info = get_weather(city)
-    await context.bot.send_message(chat_id, text=weather_info)
+    try:
+        weather_info = get_weather(city)
+        await context.bot.send_message(chat_id, text=weather_info)
+    except TimedOut:
+        logger.error("Ошибка таймаута при отправке сообщения.")
 
 def main():
     # Создание бота и добавление обработчиков
