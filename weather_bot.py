@@ -19,7 +19,7 @@ TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 
 # Перевірка наявності токенів
-if not TELEGRAM_TOKEN або не WEATHER_API_KEY:
+if not TELEGRAM_TOKEN or not WEATHER_API_KEY:
     raise ValueError("Необхідні токени відсутні. Переконайтеся, що вони вказані у файлі .env")
 
 # Налаштування логування
