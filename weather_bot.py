@@ -1,13 +1,22 @@
+import os
+import logging
+import asyncio
+import requests
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, JobQueue
-import requests
-import logging
 from telegram.error import TimedOut
-import asyncio
+from dotenv import load_dotenv
 
-# Вставьте свои токены
-TELEGRAM_TOKEN = "7533343666:AAFtXtHra2C5C_Wgl_tMs-m04plqjWItCzI"
-WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"
+# Загрузка переменных окружения из файла .env
+load_dotenv()
+
+# Получение токенов из переменных окружения
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+
+# Проверка наличия токенов
+if not TELEGRAM_TOKEN or not WEATHER_API_KEY:
+    raise ValueError("Необходимые токены отсутствуют. Убедитесь, что они указаны в файле .env")
 
 # Настройка логирования
 logging.basicConfig(
