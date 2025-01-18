@@ -30,7 +30,15 @@ def get_weather(city):
         humidity = data['main']['humidity']
         pressure = data['main']['pressure']
 
-        return f"Погода в {city}: {weather}, температура: {temp}°C, ощущается как: {feels_like}°C, влажность: {humidity}%, давление: {pressure} hPa."
+        return (
+            f"Погода в {city}:\n"
+            f"Описание: {weather}\n"
+            f"Температура: {temp}°C\n"
+            f"Ощущается как: {feels_like}°C\n"
+            f"Влажность: {humidity}%\n"
+            f"Давление: {pressure} hPa\n"
+            f"😃"
+        )
     else:
         return "Не удалось получить данные о погоде."
 
@@ -44,7 +52,7 @@ async def get_weather_update(update: Update, context):
     logger.info(f"Получено сообщение от пользователя {update.effective_user.id}")
     city = update.message.text
     weather_info = get_weather(city)
-    await update.message.reply_text(weather_info + " 😃")
+    await update.message.reply_text(weather_info)
 
 def main():
     # Создание бота и добавление обработчиков
