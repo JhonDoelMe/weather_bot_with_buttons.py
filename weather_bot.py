@@ -10,7 +10,7 @@ WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"
 
 # Настройка логирования
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
@@ -19,13 +19,12 @@ logger = logging.getLogger(__name__)
 translator = Translator()
 
 # Функция для получения погоды с OpenWeatherMap API
-async def get_weather(city):
+def get_weather(city):
     if not city:
         return "Название города не может быть пустым."
     
     # Перевод названия города на английский язык
-    translation = await translator.translate(city, dest='en')
-    translated_city = translation.text
+    translated_city = translator.translate(city, dest='en').text
     
     url = f"http://api.openweathermap.org/data/2.5/weather?q={translated_city}&appid={WEATHER_API_KEY}&units=metric&lang=ru"
     
@@ -51,7 +50,7 @@ async def start(update: Update, context):
 async def get_weather_update(update: Update, context):
     logger.info(f"Получено сообщение от пользователя {update.effective_user.id}")
     city = update.message.text
-    weather_info = await get_weather(city)
+    weather_info = get_weather(city)
     await update.message.reply_text(weather_info + " 😃")
 
 def main():
