@@ -99,10 +99,12 @@ async def handle_button_click(update: Update, context: ContextTypes.DEFAULT_TYPE
     else:
         await update.message.reply_text("Пожалуйста, нажмите 'Далее' для авторизации.")
 
-# Обработка запросов на получение и изменение города
-async def handle_city_requests(update: Update, context: ContextTypes.DEFAULT_TYPE):
+# Обработка текстовых сообщений
+async def handle_text(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     text = update.message.text
+
+    logger.info(f"Received message from user {user_id}: {text}")
 
     if user_id not in user_authorized:
         await update.message.reply_text("Пожалуйста, нажмите 'Далее' для авторизации.")
@@ -119,25 +121,19 @@ async def handle_city_requests(update: Update, context: ContextTypes.DEFAULT_TYP
     elif text == "Изменить город":
         user_cities.pop(user_id, None)
         await update.message.reply_text("Введите название города, чтобы установить его.")
+    
+    else:
+        # Обработка ввода названия города
+        city = text.strip()
+        if not city:
+            await update.message.reply_text("Пожалуйста, введите название города.")
+            return
 
-# Обработка текстовых сообщений для установки города
-async def set_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    user_id = update.effective_user.id
-
-    if user_id not in user_authorized:
-        await update.message.reply_text("Пожалуйста, нажмите 'Далее' для авторизации.")
-        return
-
-    city = update.message.text.strip()
-    if not city:
-        await update.message.reply_text("Пожалуйста, введите название города.")
-        return
-
-    user_cities[user_id] = city
-    weather_info = get_weather(city)
-    await update.message.reply_text(
-        f"Ваш город установлен: {city}.\n\n{weather_info}"
-    )
+        user_cities[user_id] = city
+        weather_info = get_weather(city)
+        await update.message.reply_text(
+            f"Ваш город установлен: {city}.\n\n{weather_info}"
+        )
 
 # Функция для автоматической отправки погоды каждые 2 часа с улучшенной обработкой ошибок
 async def send_weather(context: ContextTypes.DEFAULT_TYPE):
@@ -168,8 +164,7 @@ def main():
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_button_click))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_city_requests))
-    application.add_handler(MessageHandler(filters.TEXT, set_city))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_text))
 
     application.run_polling()
 
