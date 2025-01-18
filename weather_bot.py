@@ -4,39 +4,45 @@ import requests
 
 # Вставьте свои токены
 TELEGRAM_TOKEN = "7533343666:AAFtXtHra2C5C_Wgl_tMs-m04plqjWItCzI"
-WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"  # Замените на ваш новый API ключ
+WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"  # Замените на новый API ключ
 
 # Словарь для хранения выбранных городов пользователей
 user_cities = {}
 
-# Функция для получения погоды с API
+# Функция для получения погоды с API (с использованием Visual Crossing API)
 def get_weather(city):
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric&lang=ru"
+    url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city}?key={WEATHER_API_KEY}&unitGroup=metric&lang=ru"
+    
+    # Логирование URL запроса
+    print(f"URL запроса: {url}")
+    
     response = requests.get(url)
-
+    print(f"Статус код ответа: {response.status_code}")  # Логирование статуса ответа
+    
     if response.status_code == 200:
         data = response.json()
-
-        weather = data['weather'][0]['description']
-        temp = data['main']['temp']
-        feels_like = data['main']['feels_like']
-        humidity = data['main']['humidity']  # Влажность
-        pressure = data['main']['pressure']  # Атмосферное давление
+        print(f"Ответ API: {data}")  # Логирование данных ответа
+        
+        # Извлекаем необходимые данные
+        weather = data['currentConditions']['conditions']
+        temp = data['currentConditions']['temp']
+        feels_like = data['currentConditions']['feelslike']
+        humidity = data['currentConditions']['humidity']
+        pressure = data['currentConditions']['pressure']
 
         # Эмодзи для разных типов погоды
         weather_emoji = {
-            "clear sky": "☀️",
-            "few clouds": "🌤",
-            "scattered clouds": "☁️",
-            "broken clouds": "☁️",
-            "shower rain": "🌧",
-            "rain": "🌧",
-            "thunderstorm": "⛈",
-            "snow": "❄️",
-            "mist": "🌫"
+            "Clear": "☀️",
+            "Partly Cloudy": "🌤",
+            "Cloudy": "☁️",
+            "Overcast": "☁️",
+            "Rain": "🌧",
+            "Thunderstorm": "⛈",
+            "Snow": "❄️",
+            "Mist": "🌫"
         }
 
-        emoji = weather_emoji.get(weather, "🌥")  # Если погода не в словаре, поставим облако
+        emoji = weather_emoji.get(weather, "🌥")
 
         weather_info = (
             f"{emoji} {weather.capitalize()}\n"
@@ -47,6 +53,7 @@ def get_weather(city):
         )
         return weather_info
     else:
+        print(f"Ошибка API: {response.status_code}")
         return f"Не удалось получить погоду для города: {city}. Ошибка {response.status_code}"
 
 # Команда /start
