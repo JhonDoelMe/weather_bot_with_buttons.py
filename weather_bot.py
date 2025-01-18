@@ -141,7 +141,7 @@ def main():
     application.add_handler(MessageHandler(filters.TEXT, set_city))
 
     # Устанавливаем периодическую задачу на 2 часа
-    job_queue.run_repeating(send_weather, interval=7200, first=10, context={'user_id': 123456789})  # Замените 123456789 на ID пользователя
+    job_queue.run_repeating(send_weather, interval=7200, first=10)
 
     # Запуск бота
     application.run_polling()
