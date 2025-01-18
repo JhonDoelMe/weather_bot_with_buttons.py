@@ -75,11 +75,14 @@ async def get_weather_update(update: Update, context):
     context.user_data['chat_id'] = update.effective_chat.id  # Сохраним chat_id для обновлений
     weather_info = get_weather(city)
     await update.message.reply_text(weather_info)
+    
+    # Уведомление о следующем обновлении прогноза
+    await update.message.reply_text("Следующее обновление прогноза через 2 часа. 🌦️")
 
     # Настроим автоматическое обновление прогноза, избегая дублирования задач
     if 'job' in context.user_data:
         context.user_data['job'].schedule_removal()
-    job = context.job_queue.run_repeating(send_weather_update, interval=7200, first=0, context=context.user_data)
+    job = context.job_queue.run_repeating(send_weather_update, interval=7200, first=7200, context=context.user_data)
     context.user_data['job'] = job
 
 # Функция для отправки обновленного прогноза погоды
