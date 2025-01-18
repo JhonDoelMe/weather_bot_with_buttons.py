@@ -14,6 +14,25 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# Эмодзи для различных состояний погоды
+weather_emojis = {
+    "ясно": "☀️",
+    "переменная облачность": "⛅️",
+    "облачно с прояснениями": "🌤",
+    "облачно": "☁️",
+    "дождь": "🌧",
+    "гроза": "⛈",
+    "снег": "❄️",
+    "туман": "🌫"
+}
+
+# Функция для получения эмодзи по описанию погоды
+def get_weather_emoji(description):
+    for key in weather_emojis:
+        if key in description:
+            return weather_emojis[key]
+    return ""
+
 # Функция для получения погоды с OpenWeatherMap API
 def get_weather(city):
     if not city:
@@ -29,14 +48,15 @@ def get_weather(city):
         feels_like = data['main']['feels_like']
         humidity = data['main']['humidity']
         pressure = data['main']['pressure']
+        weather_emoji = get_weather_emoji(weather)
 
         return (
             f"Погода в {city}:\n"
-            f"Описание: {weather}\n"
-            f"Температура: {temp}°C\n"
-            f"Ощущается как: {feels_like}°C\n"
-            f"Влажность: {humidity}%\n"
-            f"Давление: {pressure} hPa\n"
+            f"Описание: {weather} {weather_emoji}\n"
+            f"Температура: {temp}°C 🌡️\n"
+            f"Ощущается как: {feels_like}°C 🌡️\n"
+            f"Влажность: {humidity}% 💧\n"
+            f"Давление: {pressure} hPa 🌬️\n"
             f"😃"
         )
     else:
