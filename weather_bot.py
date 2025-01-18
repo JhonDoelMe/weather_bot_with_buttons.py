@@ -15,7 +15,7 @@ job_store = {}
 
 # Настройка логирования
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Исправлено здесь
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
@@ -84,7 +84,7 @@ async def handle_button_click(update: Update, context: ContextTypes.DEFAULT_TYPE
         job_queue = context.job_queue
         if user_id in job_store:
             job_store[user_id].schedule_removal()
-        job = job_queue.run_repeating(send_weather, interval=7200, first=10, context={'user_id': user_id})
+        job = job_queue.run_repeating(send_weather, interval=7200, first=10, data={'user_id': user_id})
         job_store[user_id] = job
 
         keyboard = [
@@ -138,7 +138,7 @@ async def set_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
 # Функция для автоматической отправки погоды каждые 2 часа с улучшенной обработкой ошибок
 async def send_weather(context: ContextTypes.DEFAULT_TYPE):
     job = context.job
-    user_id = job.context['user_id']
+    user_id = job.data['user_id']
 
     if user_id in user_cities:
         city = user_cities[user_id]
