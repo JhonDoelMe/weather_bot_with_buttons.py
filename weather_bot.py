@@ -4,7 +4,7 @@ import requests
 
 # Вставьте свои токены
 TELEGRAM_TOKEN = "7533343666:AAFtXtHra2C5C_Wgl_tMs-m04plqjWItCzI"
-WEATHER_API_KEY = "b084afc0b8a3457bcbe1588a428ec949"  # Замените на ваш новый API ключ
+WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"  # Замените на ваш новый API ключ
 
 # Словарь для хранения выбранных городов пользователей
 user_cities = {}
