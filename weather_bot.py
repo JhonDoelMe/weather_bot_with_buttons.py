@@ -14,7 +14,7 @@ user_authorized = {}
 
 # Настройка логирования
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Исправлено здесь
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
@@ -138,11 +138,15 @@ async def send_weather(context: ContextTypes.DEFAULT_TYPE):
             await context.bot.send_message(user_id, f"Погода для города {city}:\n{weather_info}")
         except BadRequest as e:
             logger.error(f"Не удалось отправить сообщение пользователю {user_id}: {e}")
+        except Exception as e:
+            logger.error(f"Неожиданная ошибка при отправке сообщения пользователю {user_id}: {e}")
     else:
         try:
             await context.bot.send_message(user_id, "Вы ещё не установили город. Нажмите 'Изменить город', чтобы установить его.")
         except BadRequest as e:
             logger.error(f"Не удалось отправить сообщение пользователю {user_id}: {e}")
+        except Exception as e:
+            logger.error(f"Неожиданная ошибка при отправке сообщения пользователю {user_id}: {e}")
 
 # Основная функция
 def main():
