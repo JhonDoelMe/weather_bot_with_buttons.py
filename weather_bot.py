@@ -125,7 +125,7 @@ async def get_weather_update(update: Update, context):
     await send_message_with_retries(bot, update.effective_chat.id, "Наступне оновлення прогнозу через 2 години. 🌦️")
 
     # Налаштуємо автоматичне оновлення прогнозу, уникнувши дублювання завдань
-    if 'job' в context.user_data:
+    if 'job' in context.user_data:
         context.user_data['job'].schedule_removal()
     job = context.job_queue.run_repeating(send_weather_update, interval=7200, first=7200, data=context.user_data)
     context.user_data['job'] = job
