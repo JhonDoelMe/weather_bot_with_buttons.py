@@ -4,41 +4,42 @@ import requests
 
 # Вставьте свои токены
 TELEGRAM_TOKEN = "7533343666:AAFtXtHra2C5C_Wgl_tMs-m04plqjWItCzI"
-VISUAL_CROSSING_API_KEY = "HV54XRUW96NY49NRGX97TL6NL"  # Замените на ваш ключ
+WEATHER_API_KEY = "b084afc0b8a3457bcbe1588a428ec949"  # Замените на ваш новый API ключ
 
 # Словарь для хранения выбранных городов пользователей
 user_cities = {}
 
-# Функция для получения погоды с Visual Crossing API
+# Функция для получения погоды с API
 def get_weather(city):
-    url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city}?key={VISUAL_CROSSING_API_KEY}"
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric&lang=ru"
     response = requests.get(url)
-    
+
     if response.status_code == 200:
         data = response.json()
-        
-        current_conditions = data['currentConditions']
-        weather = current_conditions['conditions']
-        temp = current_conditions['temp']
-        feels_like = current_conditions['feelslike']
-        humidity = current_conditions['humidity']
-        pressure = current_conditions['pressure']
+
+        weather = data['weather'][0]['description']
+        temp = data['main']['temp']
+        feels_like = data['main']['feels_like']
+        humidity = data['main']['humidity']  # Влажность
+        pressure = data['main']['pressure']  # Атмосферное давление
 
         # Эмодзи для разных типов погоды
         weather_emoji = {
-            "Clear": "☀️",
-            "Partly Cloudy": "🌤",
-            "Cloudy": "☁️",
-            "Rain": "🌧",
-            "Thunderstorms": "⛈",
-            "Snow": "❄️",
-            "Fog": "🌫"
+            "clear sky": "☀️",
+            "few clouds": "🌤",
+            "scattered clouds": "☁️",
+            "broken clouds": "☁️",
+            "shower rain": "🌧",
+            "rain": "🌧",
+            "thunderstorm": "⛈",
+            "snow": "❄️",
+            "mist": "🌫"
         }
 
         emoji = weather_emoji.get(weather, "🌥")  # Если погода не в словаре, поставим облако
 
         weather_info = (
-            f"{emoji} {weather}\n"
+            f"{emoji} {weather.capitalize()}\n"
             f"Температура: {temp}°C\n"
             f"Ощущается как: {feels_like}°C\n"
             f"Влажность: {humidity}%\n"
