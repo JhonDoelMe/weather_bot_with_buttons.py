@@ -76,14 +76,17 @@ async def get_weather_update(update: Update, context):
     weather_info = get_weather(city)
     await update.message.reply_text(weather_info)
 
-    # Настроим автоматическое обновление прогноза
-    context.job_queue.run_repeating(send_weather_update, interval=7200, first=0, context=context.user_data)
+    # Настроим автоматическое обновление прогноза, избегая дублирования задач
+    if 'job' in context.user_data:
+        context.user_data['job'].schedule_removal()
+    job = context.job_queue.run_repeating(send_weather_update, interval=7200, first=0, context=context.user_data)
+    context.user_data['job'] = job
 
 # Функция для отправки обновленного прогноза погоды
 async def send_weather_update(context):
     job = context.job
-    city = job.context['city']
-    chat_id = job.context['chat_id']
+    city = job.data['city']
+    chat_id = job.data['chat_id']
     weather_info = get_weather(city)
     await context.bot.send_message(chat_id, text=weather_info)
 
