@@ -1,4 +1,4 @@
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 import requests
 
@@ -13,6 +13,7 @@ user_cities = {}
 def get_weather(city):
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric&lang=ru"
     response = requests.get(url)
+    print(f"URL запроса: {url}")  # Добавлено для отладки
     if response.status_code == 200:
         data = response.json()
 
@@ -46,6 +47,7 @@ def get_weather(city):
         )
         return weather_info
     else:
+        print(f"Ошибка получения данных: {response.status_code}")  # Добавлено для отладки
         return f"Не удалось получить погоду для города: {city}. Ошибка {response.status_code}"
 
 # Команда /start
@@ -85,6 +87,10 @@ async def set_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     city = update.message.text.strip()
 
+    if not city:
+        await update.message.reply_text("Пожалуйста, введите название города.")
+        return
+
     # Сохраняем выбранный город
     user_cities[user_id] = city
 
@@ -96,7 +102,7 @@ async def set_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Ваш город установлен: {city}.\n\n{weather_info}"
         )
     else:
-        await update.message.reply_text(f"Не удалось получить погоду для города: {city}.")
+        await update.message.reply_text(f"Не удалось получить погоду для города: {city}. Проверьте правильность написания.")
 
 # Основная функция
 def main():
