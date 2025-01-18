@@ -5,33 +5,27 @@ import logging
 
 # Вставьте свои токены
 TELEGRAM_TOKEN = "7533343666:AAFtXtHra2C5C_Wgl_tMs-m04plqjWItCzI"
-WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"  # Ваш API ключ OpenWeatherMap
+WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"
 
 # Словарь для хранения выбранных городов пользователей
 user_cities = {}
 
 # Функция для получения погоды с OpenWeatherMap API
 def get_weather(city):
+    if not city:
+        return "Название города не может быть пустым."
+    
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric&lang=ru"
     
-    # Логирование URL запроса
-    print(f"URL запроса: {url}")
-    
     response = requests.get(url)
-    print(f"Статус код ответа: {response.status_code}")  # Логирование статуса ответа
-    
     if response.status_code == 200:
         data = response.json()
-        print(f"Ответ API: {data}")  # Логирование данных ответа
-        
-        # Извлекаем необходимые данные
         weather = data['weather'][0]['description']
         temp = data['main']['temp']
         feels_like = data['main']['feels_like']
         humidity = data['main']['humidity']
         pressure = data['main']['pressure']
 
-        # Эмодзи для разных типов погоды
         weather_emoji = {
             "clear sky": "☀️",
             "few clouds": "🌤",
@@ -45,7 +39,6 @@ def get_weather(city):
         }
 
         emoji = weather_emoji.get(weather, "🌥")
-
         weather_info = (
             f"{emoji} {weather.capitalize()}\n"
             f"Температура: {temp}°C\n"
@@ -55,7 +48,6 @@ def get_weather(city):
         )
         return weather_info
     else:
-        print(f"Ошибка API: {response.status_code}")
         return f"Не удалось получить погоду для города: {city}. Ошибка {response.status_code}"
 
 # Команда /start
@@ -79,15 +71,12 @@ async def handle_button_click(update: Update, context: ContextTypes.DEFAULT_TYPE
         if user_id in user_cities:
             city = user_cities[user_id]
             weather_info = get_weather(city)
-            if weather_info:
-                await update.message.reply_text(f"Ваш город: {city}\n{weather_info}")
-            else:
-                await update.message.reply_text(f"Не удалось получить погоду для города: {city}.")
+            await update.message.reply_text(f"Ваш город: {city}\n{weather_info}")
         else:
             await update.message.reply_text("Вы ещё не установили город. Нажмите 'Изменить город', чтобы установить его.")
 
     elif text == "Изменить город":
-        user_cities.pop(user_id, None)  # Удаляем текущий город, если он есть
+        user_cities.pop(user_id, None)
         await update.message.reply_text("Введите название города, чтобы установить его.")
 
 # Обработка текстовых сообщений для установки города
@@ -99,51 +88,35 @@ async def set_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text("Пожалуйста, введите название города.")
         return
 
-    # Сохраняем выбранный город
     user_cities[user_id] = city
-
-    # Получаем погоду для нового города
     weather_info = get_weather(city)
-
-    if weather_info:
-        await update.message.reply_text(
-            f"Ваш город установлен: {city}.\n\n{weather_info}"
-        )
-    else:
-        await update.message.reply_text(f"Не удалось получить погоду для города: {city}. Проверьте правильность написания.")
+    await update.message.reply_text(
+        f"Ваш город установлен: {city}.\n\n{weather_info}"
+    )
 
 # Функция для автоматической отправки погоды каждые 2 часа
 async def send_weather(context: ContextTypes.DEFAULT_TYPE):
     job = context.job
     user_id = job.data['user_id']
-    
+
     if user_id in user_cities:
         city = user_cities[user_id]
         weather_info = get_weather(city)
-        if weather_info:
-            await context.bot.send_message(user_id, f"Погода для города {city}:\n{weather_info}")
-        else:
-            await context.bot.send_message(user_id, f"Не удалось получить погоду для города: {city}.")
+        await context.bot.send_message(user_id, f"Погода для города {city}:\n{weather_info}")
     else:
         await context.bot.send_message(user_id, "Вы ещё не установили город. Нажмите 'Изменить город', чтобы установить его.")
 
 # Основная функция
 def main():
-    # Создаём приложение
     application = Application.builder().token(TELEGRAM_TOKEN).build()
-
-    # Получаем JobQueue для отправки погоды через каждые 2 часа
     job_queue = application.job_queue
 
-    # Обработчики
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_button_click))
     application.add_handler(MessageHandler(filters.TEXT, set_city))
 
-    # Устанавливаем периодическую задачу на 2 часа
-    job_queue.run_repeating(send_weather, interval=7200, first=10, data={'user_id': 123456789})  # Замените 123456789 на ID пользователя
+    job_queue.run_repeating(send_weather, interval=7200, first=10, data={'user_id': 123456789})
 
-    # Запуск бота
     application.run_polling()
 
 if __name__ == '__main__':
