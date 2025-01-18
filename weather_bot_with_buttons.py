@@ -1,5 +1,5 @@
 from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
 import requests
 
 # Вставьте свои токены
@@ -105,9 +105,8 @@ def main():
 
     # Обработчики
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(CallbackQueryHandler(handle_button_click))
-    application.add_handler(CommandHandler("set_city", set_city))
-    application.add_handler(CommandHandler("change_city", set_city))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_button_click))
+    application.add_handler(MessageHandler(filters.TEXT, set_city))
 
     # Запуск бота
     application.run_polling()
