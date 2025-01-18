@@ -41,27 +41,31 @@ def get_weather(city):
     
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric&lang=ru"
     
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        weather = data['weather'][0]['description']
-        temp = data['main']['temp']
-        feels_like = data['main']['feels_like']
-        humidity = data['main']['humidity']
-        pressure = data['main']['pressure']
-        weather_emoji = get_weather_emoji(weather)
+    try:
+        response = requests.get(url, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            weather = data['weather'][0]['description']
+            temp = data['main']['temp']
+            feels_like = data['main']['feels_like']
+            humidity = data['main']['humidity']
+            pressure = data['main']['pressure']
+            weather_emoji = get_weather_emoji(weather)
 
-        return (
-            f"Погода в {city}:\n"
-            f"Описание: {weather} {weather_emoji}\n"
-            f"Температура: {temp}°C 🌡️\n"
-            f"Ощущается как: {feels_like}°C 🌡️\n"
-            f"Влажность: {humidity}% 💧\n"
-            f"Давление: {pressure} hPa 🌬️\n"
-            f"😃"
-        )
-    else:
-        return "Не удалось получить данные о погоде."
+            return (
+                f"Погода в {city}:\n"
+                f"Описание: {weather} {weather_emoji}\n"
+                f"Температура: {temp}°C 🌡️\n"
+                f"Ощущается как: {feels_like}°C 🌡️\n"
+                f"Влажность: {humidity}% 💧\n"
+                f"Давление: {pressure} hPa 🌬️\n"
+                f"😃"
+            )
+        else:
+            return "Не удалось получить данные о погоде."
+    except requests.exceptions.Timeout:
+        logger.error("Ошибка таймаута при получении данных о погоде.")
+        return "Произошла ошибка при получении данных о погоде. Попробуйте снова позже."
 
 # Функция для обработки команд /start
 async def start(update: Update, context):
@@ -75,16 +79,19 @@ async def get_weather_update(update: Update, context):
     context.user_data['city'] = city  # Сохраним город для обновлений
     context.user_data['chat_id'] = update.effective_chat.id  # Сохраним chat_id для обновлений
     weather_info = get_weather(city)
-    await update.message.reply_text(weather_info)
     
-    # Уведомление о следующем обновлении прогноза
-    await update.message.reply_text("Следующее обновление прогноза через 2 часа. 🌦️")
+    try:
+        await update.message.reply_text(weather_info)
+        # Уведомление о следующем обновлении прогноза
+        await update.message.reply_text("Следующее обновление прогноза через 2 часа. 🌦️")
 
-    # Настроим автоматическое обновление прогноза, избегая дублирования задач
-    if 'job' in context.user_data:
-        context.user_data['job'].schedule_removal()
-    job = context.job_queue.run_repeating(send_weather_update, interval=7200, first=7200, data=context.user_data)
-    context.user_data['job'] = job
+        # Настроим автоматическое обновление прогноза, избегая дублирования задач
+        if 'job' in context.user_data:
+            context.user_data['job'].schedule_removal()
+        job = context.job_queue.run_repeating(send_weather_update, interval=7200, first=7200, data=context.user_data)
+        context.user_data['job'] = job
+    except TimedOut:
+        logger.error("Ошибка таймаута при отправке сообщения.")
 
 # Функция для отправки обновленного прогноза погоды
 async def send_weather_update(context):
