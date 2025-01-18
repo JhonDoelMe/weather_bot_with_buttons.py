@@ -4,14 +4,14 @@ import requests
 
 # Вставьте свои токены
 TELEGRAM_TOKEN = "7533343666:AAFtXtHra2C5C_Wgl_tMs-m04plqjWItCzI"
-WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"  # Замените на новый API ключ
+WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"  # Ваш API ключ OpenWeatherMap
 
 # Словарь для хранения выбранных городов пользователей
 user_cities = {}
 
-# Функция для получения погоды с API (с использованием Visual Crossing API)
+# Функция для получения погоды с OpenWeatherMap API
 def get_weather(city):
-    url = f"https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/{city}?key={WEATHER_API_KEY}&unitGroup=metric&lang=ru"
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric&lang=ru"
     
     # Логирование URL запроса
     print(f"URL запроса: {url}")
@@ -24,22 +24,23 @@ def get_weather(city):
         print(f"Ответ API: {data}")  # Логирование данных ответа
         
         # Извлекаем необходимые данные
-        weather = data['currentConditions']['conditions']
-        temp = data['currentConditions']['temp']
-        feels_like = data['currentConditions']['feelslike']
-        humidity = data['currentConditions']['humidity']
-        pressure = data['currentConditions']['pressure']
+        weather = data['weather'][0]['description']
+        temp = data['main']['temp']
+        feels_like = data['main']['feels_like']
+        humidity = data['main']['humidity']
+        pressure = data['main']['pressure']
 
         # Эмодзи для разных типов погоды
         weather_emoji = {
-            "Clear": "☀️",
-            "Partly Cloudy": "🌤",
-            "Cloudy": "☁️",
-            "Overcast": "☁️",
-            "Rain": "🌧",
-            "Thunderstorm": "⛈",
-            "Snow": "❄️",
-            "Mist": "🌫"
+            "clear sky": "☀️",
+            "few clouds": "🌤",
+            "scattered clouds": "☁️",
+            "broken clouds": "☁️",
+            "shower rain": "🌧",
+            "rain": "🌧",
+            "thunderstorm": "⛈",
+            "snow": "❄️",
+            "mist": "🌫"
         }
 
         emoji = weather_emoji.get(weather, "🌥")
@@ -108,20 +109,4 @@ async def set_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Ваш город установлен: {city}.\n\n{weather_info}"
         )
     else:
-        await update.message.reply_text(f"Не удалось получить погоду для города: {city}. Проверьте правильность написания.")
-
-# Основная функция
-def main():
-    # Создаём приложение
-    application = Application.builder().token(TELEGRAM_TOKEN).build()
-
-    # Обработчики
-    application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_button_click))
-    application.add_handler(MessageHandler(filters.TEXT, set_city))
-
-    # Запуск бота
-    application.run_polling()
-
-if __name__ == '__main__':
-    main()
+        await update.message.reply_text(f"Не удалось получить погоду для города: {city}. Проверьте правильность написания."
