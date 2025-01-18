@@ -24,7 +24,7 @@ if not TELEGRAM_TOKEN or not WEATHER_API_KEY:
 
 # Налаштування логування
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO  # Встановіть рівень логування на INFO для відладки
 )
 logger = logging.getLogger(__name__)
