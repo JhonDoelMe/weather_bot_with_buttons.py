@@ -10,10 +10,11 @@ WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"
 
 # Словарь для хранения выбранных городов пользователей
 user_cities = {}
+user_authorized = {}
 
 # Настройка логирования
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
@@ -61,19 +62,42 @@ def get_weather(city):
 # Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = [
-        [KeyboardButton("Мой город"), KeyboardButton("Изменить город")]
+        [KeyboardButton("Далее")]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
 
     await update.message.reply_text(
-        "Привет! Я бот прогноза погоды. Вы можете узнать погоду для вашего города или изменить город.",
+        "Привет! Добро пожаловать в бота прогноза погоды. Нажмите 'Далее' для авторизации.",
         reply_markup=reply_markup
     )
 
-# Обработка кнопок
+# Обработка кнопки 'Далее' для авторизации пользователя
 async def handle_button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     text = update.message.text
+
+    if text == "Далее":
+        user_authorized[user_id] = True
+        keyboard = [
+            [KeyboardButton("Мой город"), KeyboardButton("Изменить город")]
+        ]
+        reply_markup = ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=True)
+        
+        await update.message.reply_text(
+            "Вы успешно авторизованы. Теперь вы можете узнать погоду для вашего города или изменить город.",
+            reply_markup=reply_markup
+        )
+    else:
+        await update.message.reply_text("Пожалуйста, нажмите 'Далее' для авторизации.")
+
+# Обработка запросов на получение и изменение города
+async def handle_city_requests(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    text = update.message.text
+
+    if user_id not in user_authorized:
+        await update.message.reply_text("Пожалуйста, нажмите 'Далее' для авторизации.")
+        return
 
     if text == "Мой город":
         if user_id in user_cities:
@@ -82,7 +106,7 @@ async def handle_button_click(update: Update, context: ContextTypes.DEFAULT_TYPE
             await update.message.reply_text(f"Ваш город: {city}\n{weather_info}")
         else:
             await update.message.reply_text("Вы ещё не установили город. Нажмите 'Изменить город', чтобы установить его.")
-
+    
     elif text == "Изменить город":
         user_cities.pop(user_id, None)
         await update.message.reply_text("Введите название города, чтобы установить его.")
@@ -127,6 +151,7 @@ def main():
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_button_click))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_city_requests))
     application.add_handler(MessageHandler(filters.TEXT, set_city))
 
     # Замените 123456789 на действительный ID пользователя
