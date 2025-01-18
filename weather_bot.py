@@ -3,6 +3,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, J
 import requests
 import logging
 from telegram.error import TimedOut
+import asyncio
 
 # Вставьте свои токены
 TELEGRAM_TOKEN = "7533343666:AAFtXtHra2C5C_Wgl_tMs-m04plqjWItCzI"
@@ -10,7 +11,7 @@ WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"
 
 # Настройка логирования
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',
     level=logging.ERROR  # Установите уровень логирования на ERROR
 )
 logger = logging.getLogger(__name__)
@@ -67,10 +68,23 @@ def get_weather(city):
         logger.error("Ошибка таймаута при получении данных о погоде.")
         return "Произошла ошибка при получении данных о погоде. Попробуйте снова позже."
 
+# Асинхронная функция для отправки сообщений с повторными попытками
+async def send_message_with_retries(bot, chat_id, text, retries=3, delay=5):
+    for attempt in range(retries):
+        try:
+            await bot.send_message(chat_id, text=text)
+            return
+        except TimedOut:
+            logger.error(f"Ошибка таймаута при отправке сообщения. Попытка {attempt + 1} из {retries}.")
+            if attempt < retries - 1:
+                await asyncio.sleep(delay)
+            else:
+                logger.error("Не удалось отправить сообщение после нескольких попыток.")
+
 # Функция для обработки команд /start
 async def start(update: Update, context):
     logger.error(f"Команда /start получена от пользователя {update.effective_user.id}")
-    await update.message.reply_text("Привет! Я бот для получения погоды. Просто введи название города на русском языке, чтобы узнать погоду. 😃")
+    await send_message_with_retries(update.message.bot, update.effective_chat.id, "Привет! Я бот для получения погоды. Просто введи название города на русском языке, чтобы узнать погоду. 😃")
 
 # Функция для обработки текстовых сообщений и выдачи прогноза погоды
 async def get_weather_update(update: Update, context):
@@ -80,29 +94,23 @@ async def get_weather_update(update: Update, context):
     context.user_data['chat_id'] = update.effective_chat.id  # Сохраним chat_id для обновлений
     weather_info = get_weather(city)
     
-    try:
-        await update.message.reply_text(weather_info)
-        # Уведомление о следующем обновлении прогноза
-        await update.message.reply_text("Следующее обновление прогноза через 2 часа. 🌦️")
+    await send_message_with_retries(update.message.bot, update.effective_chat.id, weather_info)
+    # Уведомление о следующем обновлении прогноза
+    await send_message_with_retries(update.message.bot, update.effective_chat.id, "Следующее обновление прогноза через 2 часа. 🌦️")
 
-        # Настроим автоматическое обновление прогноза, избегая дублирования задач
-        if 'job' in context.user_data:
-            context.user_data['job'].schedule_removal()
-        job = context.job_queue.run_repeating(send_weather_update, interval=7200, first=7200, data=context.user_data)
-        context.user_data['job'] = job
-    except TimedOut:
-        logger.error("Ошибка таймаута при отправке сообщения.")
+    # Настроим автоматическое обновление прогноза, избегая дублирования задач
+    if 'job' in context.user_data:
+        context.user_data['job'].schedule_removal()
+    job = context.job_queue.run_repeating(send_weather_update, interval=7200, first=7200, data=context.user_data)
+    context.user_data['job'] = job
 
 # Функция для отправки обновленного прогноза погоды
 async def send_weather_update(context):
     job = context.job
     city = job.data['city']
     chat_id = job.data['chat_id']
-    try:
-        weather_info = get_weather(city)
-        await context.bot.send_message(chat_id, text=weather_info)
-    except TimedOut:
-        logger.error("Ошибка таймаута при отправке сообщения.")
+    weather_info = get_weather(city)
+    await send_message_with_retries(context.bot, chat_id, weather_info)
 
 def main():
     # Создание бота и добавление обработчиков
