@@ -123,8 +123,12 @@ async def handle_city_requests(update: Update, context: ContextTypes.DEFAULT_TYP
 # Обработка текстовых сообщений для установки города
 async def set_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
-    city = update.message.text.strip()
 
+    if user_id not in user_authorized:
+        await update.message.reply_text("Пожалуйста, нажмите 'Далее' для авторизации.")
+        return
+
+    city = update.message.text.strip()
     if not city:
         await update.message.reply_text("Пожалуйста, введите название города.")
         return
