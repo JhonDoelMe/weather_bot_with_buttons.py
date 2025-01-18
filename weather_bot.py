@@ -82,7 +82,7 @@ async def get_weather_update(update: Update, context):
     # Настроим автоматическое обновление прогноза, избегая дублирования задач
     if 'job' in context.user_data:
         context.user_data['job'].schedule_removal()
-    job = context.job_queue.run_repeating(send_weather_update, interval=7200, first=7200, context=context.user_data)
+    job = context.job_queue.run_repeating(send_weather_update, interval=7200, first=7200, data=context.user_data)
     context.user_data['job'] = job
 
 # Функция для отправки обновленного прогноза погоды
