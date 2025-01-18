@@ -10,7 +10,7 @@ WEATHER_API_KEY = "31ebd431e1fab770d9981dcdb8180f89"
 # Настройка логирования
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    level=logging.ERROR  # Установите уровень логирования на ERROR
 )
 logger = logging.getLogger(__name__)
 
@@ -64,12 +64,12 @@ def get_weather(city):
 
 # Функция для обработки команд /start
 async def start(update: Update, context):
-    logger.info(f"Команда /start получена от пользователя {update.effective_user.id}")
+    logger.error(f"Команда /start получена от пользователя {update.effective_user.id}")
     await update.message.reply_text("Привет! Я бот для получения погоды. Просто введи название города на русском языке, чтобы узнать погоду. 😃")
 
 # Функция для обработки текстовых сообщений и выдачи прогноза погоды
 async def get_weather_update(update: Update, context):
-    logger.info(f"Получено сообщение от пользователя {update.effective_user.id}")
+    logger.error(f"Получено сообщение от пользователя {update.effective_user.id}")
     city = update.message.text
     context.user_data['city'] = city  # Сохраним город для обновлений
     context.user_data['chat_id'] = update.effective_chat.id  # Сохраним chat_id для обновлений
