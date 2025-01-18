@@ -60,6 +60,8 @@ def get_weather(city):
 
 # Команда /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    print(f"ID пользователя при старте: {user_id}")  # Логирование ID пользователя
     keyboard = [
         [KeyboardButton("Мой город"), KeyboardButton("Изменить город")]
     ]
@@ -74,6 +76,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_button_click(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.message.from_user.id
     text = update.message.text
+
+    print(f"ID пользователя: {user_id}, текст сообщения: {text}")  # Логирование ID пользователя и текста
 
     if text == "Мой город":
         if user_id in user_cities:
@@ -94,6 +98,8 @@ async def handle_button_click(update: Update, context: ContextTypes.DEFAULT_TYPE
 async def set_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_id = update.effective_user.id
     city = update.message.text.strip()
+
+    print(f"ID пользователя при установке города: {user_id}, введённый город: {city}")  # Логирование
 
     if not city:
         await update.message.reply_text("Пожалуйста, введите название города.")
@@ -116,6 +122,8 @@ async def set_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def send_weather(context: ContextTypes.DEFAULT_TYPE):
     job = context.job
     user_id = job.data['user_id']
+    
+    print(f"ID пользователя для отправки погоды: {user_id}")  # Логирование ID пользователя
     
     if user_id in user_cities:
         city = user_cities[user_id]
