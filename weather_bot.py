@@ -1,6 +1,7 @@
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, ContextTypes, JobQueue
 import requests
+import logging
 
 # Вставьте свои токены
 TELEGRAM_TOKEN = "7533343666:AAFtXtHra2C5C_Wgl_tMs-m04plqjWItCzI"
@@ -111,15 +112,34 @@ async def set_city(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text(f"Не удалось получить погоду для города: {city}. Проверьте правильность написания.")
 
+# Функция для автоматической отправки погоды каждые 2 часа
+async def send_weather(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.message.from_user.id
+    if user_id in user_cities:
+        city = user_cities[user_id]
+        weather_info = get_weather(city)
+        if weather_info:
+            await update.message.reply_text(f"Погода для города {city}:\n{weather_info}")
+        else:
+            await update.message.reply_text(f"Не удалось получить погоду для города: {city}.")
+    else:
+        await update.message.reply_text("Вы ещё не установили город. Нажмите 'Изменить город', чтобы установить его.")
+
 # Основная функция
 def main():
     # Создаём приложение
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
+    # Получаем JobQueue для отправки погоды через каждые 2 часа
+    job_queue = application.job_queue
+
     # Обработчики
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_button_click))
     application.add_handler(MessageHandler(filters.TEXT, set_city))
+
+    # Устанавливаем периодическую задачу на 2 часа
+    job_queue.run_repeating(send_weather, interval=7200, first=10)
 
     # Запуск бота
     application.run_polling()
