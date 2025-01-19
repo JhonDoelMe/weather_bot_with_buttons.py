@@ -34,7 +34,7 @@ async def button(update, context: CallbackContext):
                 weather_info = await get_weather(city)
                 await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
             else:
-                await send_message_with_retries(context.bot, update.effective_chat.id, "Город не установлен. Введите название города:")
+                await send_message_with_retries(context.bot, update.effective_chat.id, "Город не установлен. Пожалуйста, введите название города:")
                 context.user_data['waiting_for_city'] = True
         elif text == 'Курс гривны':
             await get_currency_rate(update, context)
