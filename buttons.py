@@ -26,7 +26,9 @@ async def button(update, context: CallbackContext):
         if text == 'Погода':
             user_data = load_user_data(update.effective_user.id)
             if user_data and user_data['city']:
-                await get_weather_update(update, context)
+                city = user_data['city']
+                weather_info = await get_weather(city)
+                await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
             else:
                 await request_city(update, context)
         elif text == 'Курс гривны':
