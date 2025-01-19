@@ -6,6 +6,7 @@ from user_data import save_user_data, load_user_data
 from buttons import show_menu, button
 from message_utils import send_message_with_retries
 from utils import request_city
+from weather import get_weather  # Добавлен импорт
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
