@@ -6,13 +6,9 @@ from currency import get_currency_rate
 
 logger = logging.getLogger(__name__)
 
-def build_menu(buttons, n_cols):
-    menu = [buttons[i:i + n_cols] for i in range(0, len(buttons), n_cols)]
-    return menu
-
 async def show_menu(update, context):
     buttons = [[KeyboardButton('Погода'), KeyboardButton('Курс гривны')]]
-    keyboard = ReplyKeyboardMarkup(build_menu(buttons, n_cols=2), resize_keyboard=True)
+    keyboard = ReplyKeyboardMarkup(buttons, resize_keyboard=True)
     if update.message:
         await update.message.reply_text('Выберите опцию:', reply_markup=keyboard)
     elif update.callback_query:
