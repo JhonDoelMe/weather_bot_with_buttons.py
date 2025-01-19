@@ -1,4 +1,5 @@
 import aiohttp
+import asyncio
 import logging
 from telegram import Update
 from telegram.ext import CallbackContext
@@ -9,6 +10,8 @@ logger = logging.getLogger(__name__)
 
 async def get_currency_rate(update: Update, context: CallbackContext):
     url = f"https://openexchangerates.org/api/latest.json?app_id={CURRENCY_API_KEY}"
+
+    chat_id = update.callback_query.message.chat_id
 
     try:
         async with aiohttp.ClientSession() as session:
@@ -24,9 +27,9 @@ async def get_currency_rate(update: Update, context: CallbackContext):
                         f"UAH: {rates['UAH']}\n"
                         f"RUB: {rates['RUB']}\n"
                     )
-                    await send_message_with_retries(context.bot, update.effective_chat.id, message)
+                    await send_message_with_retries(context.bot, chat_id, message)
                 else:
-                    await send_message_with_retries(context.bot, update.effective_chat.id, "Не удалось получить данные о курсах валют.")
+                    await send_message_with_retries(context.bot, chat_id, "Не удалось получить данные о курсах валют.")
     except (asyncio.TimeoutError, aiohttp.ClientError, aiohttp.ServerTimeoutError) as e:
         logger.error(f"Ошибка при получении данных о курсах валют: {e}")
-        await send_message_with_retries(context.bot, update.effective_chat.id, "Произошла ошибка при получении данных о курсах валют. Попробуйте снова позже.")
+        await send_message_with_retries(context.bot, chat_id, "Произошла ошибка при получении данных о курсах валют. Попробуйте снова позже.")
