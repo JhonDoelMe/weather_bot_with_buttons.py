@@ -3,34 +3,34 @@ import logging
 import asyncio
 import aiohttp
 import json
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, JobQueue
 from telegram.error import TimedOut
 from dotenv import load_dotenv
 from cachetools import TTLCache
 from aiohttp import ClientError, ServerTimeoutError
 
-# Загрузка переменных окружения из файла .env
+# Завантаження змінних середовища з файлу .env
 if not os.path.isfile('.env'):
-    raise FileNotFoundError("Файл .env не найден. Убедитесь, что файл .env присутствует в корневой директории проекта.")
+    raise FileNotFoundError("Файл .env не знайдено. Переконайтеся, що файл .env присутній у кореневій директорії проекту.")
 load_dotenv()
 
-# Получение токенов из переменных окружения
+# Отримання токенів зі змінних середовища
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 
-# Проверка наличия токенов
+# Перевірка наявності токенів
 if not TELEGRAM_TOKEN or not WEATHER_API_KEY:
-    raise ValueError("Отсутствуют необходимые токены. Убедитесь, что они указаны в файле .env")
+    raise ValueError("Необхідні токени відсутні. Переконайтеся, що вони вказані у файлі .env")
 
-# Настройка логирования
+# Налаштування логування
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    level=logging.INFO  # Встановіть рівень логування на INFO для відладки
 )
 logger = logging.getLogger(__name__)
 
-# Эмодзи для различных погодных состояний
+# Емодзі для різних станів погоди
 weather_emojis = {
     "ясно": "☀️",
     "перемінна хмарність": "⛅️",
@@ -43,25 +43,29 @@ weather_emojis = {
     "туман": "🌫"
 }
 
-# Кэш для данных о погоде
+# Кеш для даних про погоду
 weather_cache = TTLCache(maxsize=100, ttl=600)
 
-# Функция для получения эмодзи по описанию погоды
+# Путь к файлу для хранения данных
+USER_DATA_FILE = 'user_data.json'
+
+# Функція для отримання емодзі за описом погоди
 def get_weather_emoji(description):
     for key in weather_emojis:
         if key in description:
             return weather_emojis[key]
     return ""
 
-# Асинхронная функция для получения погоды
+# Асинхронна функція для отримання погоди з OpenWeatherMap API
 async def get_weather(city):
     if not city:
-        return "Название города не может быть пустым."
+        return "Назва міста не може бути порожньою."
 
     if city in weather_cache:
         return weather_cache[city]
 
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric&lang=ru"
+
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(url, timeout=10) as response:
@@ -81,95 +85,99 @@ async def get_weather(city):
                         f"Відчувається як: {feels_like}°C 🌡️\n"
                         f"Вологість: {humidity}% 💧\n"
                         f"Тиск: {pressure} hPa 🌬️\n"
+                        f"😃"
                     )
                     weather_cache[city] = weather_info
                     return weather_info
                 elif response.status == 404:
-                    return "Город не найден. Проверьте правильность ввода."
+                    return "Місто не знайдено. Перевірте правильність вводу."
                 else:
-                    return "Не удалось получить данные о погоде."
+                    return "Не вдалося отримати дані про погоду."
     except (asyncio.TimeoutError, ClientError, ServerTimeoutError) as e:
-        logger.error(f"Ошибка при получении данных о погоде: {e}")
-        return "Произошла ошибка при получении данных о погоде. Попробуйте позже."
+        logger.error(f"Помилка при отриманні даних про погоду: {e}")
+        return "Сталася помилка при отриманні даних про погоду. Спробуйте знову пізніше."
 
-# Функция для сохранения данных пользователя в файл
-def save_user_data(data):
-    with open('user_data.json', 'w') as file:
-        json.dump(data, file, indent=4)
+# Функція для збереження даних користувача в файл JSON
+def save_user_data(user_id, city):
+    if os.path.exists(USER_DATA_FILE):
+        with open(USER_DATA_FILE, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+    else:
+        data = {}
 
-# Функция для чтения данных пользователя из файла
-def read_user_data():
-    try:
-        with open('user_data.json', 'r') as file:
-            return json.load(file)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return {}
+    data[user_id] = {'city': city}
 
-# Обработка команды /start
+    with open(USER_DATA_FILE, 'w', encoding='utf-8') as file:
+        json.dump(data, file, indent=4, ensure_ascii=False)
+
+# Функція для зчитування даних користувача з файлу JSON
+def load_user_data(user_id):
+    if os.path.exists(USER_DATA_FILE):
+        with open(USER_DATA_FILE, 'r', encoding='utf-8') as file:
+            data = json.load(file)
+            return data.get(str(user_id), None)
+    return None
+
+# Асинхронна функція для відправлення повідомлень з повторними спробами
+async def send_message_with_retries(bot, chat_id, text, retries=3, delay=5):
+    for attempt in range(retries):
+        try:
+            await bot.send_message(chat_id, text=text)
+            return
+        except TimedOut:
+            logger.error(f"Помилка таймауту при відправленні повідомлення. Спроба {attempt + 1} з {retries}.")
+            if attempt < retries - 1:
+                await asyncio.sleep(delay)
+            else:
+                logger.error("Не вдалося відправити повідомлення після кількох спроб.")
+
+# Функція для обробки команди /start
 async def start(update: Update, context):
-    logger.info(f"Команда /start получена от пользователя {update.effective_user.id}")
-    user_data = read_user_data()
-    user_id = update.effective_user.id
-    if user_id not in user_data:
-        user_data[user_id] = {"city": ""}
-        save_user_data(user_data)
-    await update.message.reply("Привет! Я бот для получения погоды. Просто введи название города, чтобы узнать погоду.", reply_markup=get_main_keyboard())
+    logger.info(f"Команда /start отримана від користувача {update.effective_user.id}")
+    bot = context.bot
+    await send_message_with_retries(bot, update.effective_chat.id, "Привіт! Я бот для отримання погоди. Просто введи назву міста українською мовою, щоб дізнатися погоду. 😃")
 
-# Функция для создания клавиатуры с кнопками
-def get_main_keyboard():
-    keyboard = [
-        [
-            InlineKeyboardButton("Обновить", callback_data="update"),
-            InlineKeyboardButton("Мой город", callback_data="my_city"),
-            InlineKeyboardButton("Изменить город", callback_data="change_city")
-        ]
-    ]
-    return InlineKeyboardMarkup(keyboard)
-
-# Обработка нажатий на кнопки
-async def button(update: Update, context):
-    query = update.callback_query
-    user_data = read_user_data()
-    user_id = update.effective_user.id
-    city = user_data.get(user_id, {}).get("city", "")
-    if query.data == "update":
-        if city:
-            weather_info = await get_weather(city)
-            await query.edit_message_text(f"Прогноз для {city}:\n{weather_info}", reply_markup=get_main_keyboard())
-        else:
-            await query.edit_message_text("Город не выбран. Используйте команду 'Изменить город', чтобы выбрать город.", reply_markup=get_main_keyboard())
-    elif query.data == "my_city":
-        if city:
-            await query.edit_message_text(f"Ваш город: {city}", reply_markup=get_main_keyboard())
-        else:
-            await query.edit_message_text("Город не установлен. Используйте команду 'Изменить город', чтобы выбрать город.", reply_markup=get_main_keyboard())
-    elif query.data == "change_city":
-        await query.edit_message_text("Введите новый город:", reply_markup=None)
-
-# Обработка ввода нового города
-async def set_city(update: Update, context):
-    user_data = read_user_data()
-    user_id = update.effective_user.id
-    city = update.message.text
-    user_data[user_id]["city"] = city
-    save_user_data(user_data)
-    weather_info = await get_weather(city)
-    await update.message.reply(f"Ваш город установлен как: {city}\n{weather_info}", reply_markup=get_main_keyboard())
-
-# Обработка текста с городом
+# Функція для обробки текстових повідомлень та надання прогнозу погоди
 async def get_weather_update(update: Update, context):
+    logger.info(f"Отримано повідомлення від користувача {update.effective_user.id}")
     city = update.message.text
-    await set_city(update, context)
+    user_id = update.effective_user.id
+
+    # Збережемо місто користувача в JSON файл
+    save_user_data(user_id, city)
+
+    context.user_data['city'] = city  # Збережемо місто для оновлень
+    context.user_data['chat_id'] = update.effective_chat.id  # Збережемо chat_id для оновлень
+    weather_info = await get_weather(city)
+    bot = context.bot
+
+    await send_message_with_retries(bot, update.effective_chat.id, weather_info)
+    # Повідомлення про наступне оновлення прогнозу
+    await send_message_with_retries(bot, update.effective_chat.id, "Наступне оновлення прогнозу через 2 години. 🌦️")
+
+    # Налаштуємо автоматичне оновлення прогнозу, уникнувши дублювання завдань
+    if 'job' in context.user_data:
+        context.user_data['job'].schedule_removal()
+    job = context.job_queue.run_repeating(send_weather_update, interval=7200, first=7200, data=context.user_data)
+    context.user_data['job'] = job
+
+# Функція для відправки оновленого прогнозу погоди
+async def send_weather_update(context):
+    job = context.job
+    city = job.data['city']
+    chat_id = job.data['chat_id']
+    weather_info = await get_weather(city)
+    bot = context.bot
+    await send_message_with_retries(bot, chat_id, weather_info)
 
 def main():
-    # Создание бота и добавление обработчиков
+    # Створення бота та додавання обробників
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
-    # Обработчики команд
+    # Обробник команд /start
     application.add_handler(CommandHandler("start", start))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, get_weather_update))
 
-    # Обработчик нажатий на кнопки
+    # Обробник текстових повідомлень та команд
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, get_weather_update))
 
     # Запуск бота
