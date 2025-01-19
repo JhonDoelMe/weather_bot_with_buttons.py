@@ -30,20 +30,29 @@ def get_weather_emoji(description):
             return weather_emojis[key]
     return ""
 
+async def fetch_weather_data(session, url):
+    async with session.get(url, timeout=10) as response:
+        return await response.json()
+
 async def get_weather(city):
     if not city:
+        logger.warning("Название города не может быть пустым.")
         return "Название города не может быть пустым."
 
     if city in weather_cache:
+        logger.info(f"Погода для города {city} взята из кэша.")
         return weather_cache[city]
 
     url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric&lang=ru"
+    logger.info(f"Отправка запроса на URL: {url}")
 
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(url, timeout=10) as response:
+                logger.info(f"Получен ответ с кодом состояния: {response.status}")
                 if response.status == 200:
                     data = await response.json()
+                    logger.info(f"Получены данные: {data}")
                     weather = data['weather'][0]['description']
                     temp = data['main']['temp']
                     feels_like = data['main']['feels_like']
@@ -63,10 +72,12 @@ async def get_weather(city):
                     weather_cache[city] = weather_info
                     return weather_info
                 elif response.status == 404:
+                    logger.warning("Город не найден. Проверьте правильность ввода.")
                     return "Город не найден. Проверьте правильность ввода."
                 else:
+                    logger.error("Не удалось получить данные о погоде.")
                     return "Не удалось получить данные о погоде."
-    except (asyncio.TimeoutError, ClientError, ServerTimeoutError) as e:
+    except (asyncio.TimeoutError, ClientError, ServerTimeoutError, aiohttp.ClientConnectorError, aiohttp.ContentTypeError) as e:
         logger.error(f"Ошибка при получении данных о погоде: {e}")
         return "Произошла ошибка при получении данных о погоде. Попробуйте снова позже."
 
@@ -84,9 +95,9 @@ async def get_weather_update(update: Update, context: CallbackContext):
     logger.info(f"Получено сообщение от пользователя {user_id}: {city}")
 
     save_user_data(user_id, city)
-
     context.user_data['city'] = city
     context.user_data['chat_id'] = chat_id
+
     weather_info = await get_weather(city)
     bot = context.bot
 

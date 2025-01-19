@@ -6,33 +6,35 @@ from weather import get_weather_update
 from buttons import show_menu, button
 from message_utils import send_message_with_retries
 
-# Настройка логирования
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Исправлено 'levellevel' на 'levelname'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
-# Функция для обработки команды /start
 async def start(update: Update, context):
-    logger.info(f"Команда /start получена от пользователя {update.effective_user.id}")
-    await send_message_with_retries(context.bot, update.effective_chat.id, "Привет! Я бот для получения погоды и курса гривны. Просто введи название города на украинском языке, чтобы узнать погоду. 😃\nДля просмотра меню нажмите /menu.")
-    await show_menu(update, context)
+    try:
+        logger.info(f"Команда /start получена от пользователя {update.effective_user.id}")
+        await send_message_with_retries(context.bot, update.effective_chat.id, "Привет! Я бот для получения погоды и курса гривны. Просто введи название города на украинском языке, чтобы узнать погоду. 😃\nДля просмотра меню нажмите /menu.")
+        await show_menu(update, context)
+    except Exception as e:
+        logger.error(f"Ошибка в функции start: {e}")
+        await send_message_with_retries(context.bot, update.effective_chat.id, "Произошла ошибка. Попробуйте снова позже.")
 
 def main():
-    # Создание бота и добавление обработчиков
+    logger.info("Запуск бота...")
     application = Application.builder().token(TELEGRAM_TOKEN).build()
-
-    # Обработчик команды /start
+    
+    logger.info("Добавление обработчика команды /start")
     application.add_handler(CommandHandler("start", start))
-
-    # Обработчик команды /menu
+    
+    logger.info("Добавление обработчика команды /menu")
     application.add_handler(CommandHandler("menu", show_menu))
-
-    # Обработчик текстовых сообщений и команд
+    
+    logger.info("Добавление обработчика текстовых сообщений")
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, button))
-
-    # Запуск бота
+    
+    logger.info("Запуск опроса...")
     application.run_polling()
 
 if __name__ == "__main__":

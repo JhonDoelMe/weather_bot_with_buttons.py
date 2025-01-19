@@ -10,23 +10,25 @@ logger = logging.getLogger(__name__)
 
 async def get_currency_rate(query: CallbackQuery, context: CallbackContext):
     url = f"https://openexchangerates.org/api/latest.json?app_id={CURRENCY_API_KEY}"
-
     chat_id = query.message.chat_id
+
+    logger.info(f"Отправка запроса на URL: {url}")
 
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(url, timeout=10) as response:
+                logger.info(f"Получен ответ с кодом состояния: {response.status}")
                 if response.status == 200:
                     data = await response.json()
                     rates = data['rates']
                     uah_rate = rates['UAH']
                     message = (
                         f"Курс гривны (UAH):\n"
-                        f"USD: {1 / rates['USD'] * uah_rate}\n"
-                        f"EUR: {1 / rates['EUR'] * uah_rate}\n"
-                        f"GBP: {1 / rates['GBP'] * uah_rate}\n"
-                        f"JPY: {1 / rates['JPY'] * uah_rate}\n"
-                        f"RUB: {1 / rates['RUB'] * uah_rate}\n"
+                        f"USD: {1 / rates['USD'] * uah_rate:.2f}\n"
+                        f"EUR: {1 / rates['EUR'] * uah_rate:.2f}\n"
+                        f"GBP: {1 / rates['GBP'] * uah_rate:.2f}\n"
+                        f"JPY: {1 / rates['JPY'] * uah_rate:.2f}\n"
+                        f"RUB: {1 / rates['RUB'] * uah_rate:.2f}\n"
                     )
                     await send_message_with_retries(context.bot, chat_id, message)
                 else:
