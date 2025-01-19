@@ -8,6 +8,7 @@ from menu import show_menu, button
 from message_utils import send_message_with_retries
 from utils import request_city
 from notifications import send_notification, send_daily_weather_update, schedule_daily_weather_update, schedule_auto_update
+from weather import get_weather  # Добавляем импорт get_weather
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Исправлена опечатка в 'levellevel'
