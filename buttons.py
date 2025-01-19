@@ -1,10 +1,11 @@
 import logging
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import CallbackContext
-from weather import get_weather_update, get_weather  # Добавлен импорт
+from weather import get_weather_update, get_weather
 from currency import get_currency_rate
 from utils import request_city
 from user_data import load_user_data
+from message_utils import send_message_with_retries  # Добавлен импорт
 
 logger = logging.getLogger(__name__)
 
