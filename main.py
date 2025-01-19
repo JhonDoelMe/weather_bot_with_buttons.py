@@ -9,8 +9,8 @@ from utils import request_city
 from weather import get_weather
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Исправлено
-    level=logging.INFO  # Исправлено
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ def schedule_auto_update(context: CallbackContext, chat_id):
     user_data = load_user_data(chat_id)
     city = user_data.get('city') if user_data else None
     if city:
-        job_queue.run_repeating(auto_update, interval=7200, first=7200, context={'chat_id': chat_id, 'city': city})
+        job_queue.run_repeating(auto_update, interval=7200, first=7200, data={'chat_id': chat_id, 'city': city})
 
 def main():
     logger.info("Запуск бота...")
