@@ -3,7 +3,7 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import CallbackContext
 from weather import get_weather_update
 from currency import get_currency_rate
-from main import request_city
+from utils import request_city
 
 logger = logging.getLogger(__name__)
 

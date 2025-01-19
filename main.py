@@ -1,10 +1,11 @@
 import logging
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
+from telegram import Update
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from config import TELEGRAM_TOKEN
 from user_data import save_user_data, load_user_data
 from buttons import show_menu, button
 from message_utils import send_message_with_retries
+from utils import request_city
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -22,12 +23,6 @@ async def start(update: Update, context):
     except Exception as e:
         logger.error(f"Ошибка в функции start: {e}")
         await send_message_with_retries(context.bot, update.effective_chat.id, "Произошла ошибка. Попробуйте снова позже.")
-
-async def request_city(update: Update, context):
-    user_id = update.effective_user.id
-    chat_id = update.effective_chat.id
-    await send_message_with_retries(context.bot, chat_id, "Пожалуйста, введите название города:")
-    context.user_data['waiting_for_city'] = True
 
 async def save_city(update: Update, context):
     if context.user_data.get('waiting_for_city'):
