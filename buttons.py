@@ -1,5 +1,6 @@
 import logging
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import CallbackContext
 from weather import get_weather_update
 from currency import get_currency_rate
 
@@ -15,10 +16,18 @@ async def show_menu(update, context):
     reply_markup = InlineKeyboardMarkup(keyboard)
     await update.message.reply_text('Выберите опцию:', reply_markup=reply_markup)
 
-async def button(update, context):
+async def button(update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
     if query.data == 'weather':
-        await get_weather_update(update, context)
+        await get_weather_update_callback(update, context)
     elif query.data == 'currency':
-        await get_currency_rate(update, context)
+        await get_currency_rate_callback(update, context)
+
+async def get_weather_update_callback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    city = query.message.text
+    await get_weather_update(Update(update.callback_query), context)
+
+async def get_currency_rate_callback(update: Update, context: CallbackContext):
+    await get_currency_rate(Update(update.callback_query), context)

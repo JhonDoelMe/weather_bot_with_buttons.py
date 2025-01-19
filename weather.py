@@ -71,8 +71,12 @@ async def get_weather(city):
         return "Произошла ошибка при получении данных о погоде. Попробуйте снова позже."
 
 async def get_weather_update(update: Update, context: CallbackContext):
-    logger.info(f"Получено сообщение от пользователя {update.effective_user.id}")
-    city = update.message.text
+    if update.message:
+        city = update.message.text
+    else:
+        city = context.user_data.get('city', 'Неизвестно')
+
+    logger.info(f"Получено сообщение от пользователя {update.effective_user.id}: {city}")
     user_id = update.effective_user.id
 
     save_user_data(user_id, city)
