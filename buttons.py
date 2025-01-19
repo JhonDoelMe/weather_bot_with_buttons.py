@@ -1,5 +1,5 @@
 import logging
-from telegram import InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.ext import CallbackContext
 from weather import get_weather_update
 from currency import get_currency_rate
