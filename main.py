@@ -9,8 +9,8 @@ from utils import request_city
 from weather import get_weather
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(уровеньname)s - %(message)s',
-    уровень=logging.INFO
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Исправлено
+    level=logging.INFO  # Исправлено
 )
 logger = logging.getLogger(__name__)
 
