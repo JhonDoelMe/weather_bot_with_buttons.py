@@ -4,62 +4,62 @@ import asyncio
 import aiohttp
 import json
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, JobQueue
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from telegram.error import TimedOut
 from dotenv import load_dotenv
 from cachetools import TTLCache
 from aiohttp import ClientError, ServerTimeoutError
 
-# Завантаження змінних середовища з файлу .env
+# Загрузка переменных окружения из файла .env
 if not os.path.isfile('.env'):
-    raise FileNotFoundError("Файл .env не знайдено. Переконайтеся, що файл .env присутній у кореневій директорії проекту.")
+    raise FileNotFoundError("Файл .env не найден. Убедитесь, что файл .env присутствует в корневой директории проекта.")
 load_dotenv()
 
-# Отримання токенів зі змінних середовища
+# Получение токенов из переменных окружения
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
 
-# Перевірка наявності токенів
+# Проверка наличия токенов
 if not TELEGRAM_TOKEN or not WEATHER_API_KEY:
-    raise ValueError("Необхідні токени відсутні. Переконайтеся, що вони вказані у файлі .env")
+    raise ValueError("Необходимые токены отсутствуют. Убедитесь, что они указаны в файле .env")
 
-# Налаштування логування
+# Настройка логирования
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO  # Встановіть рівень логування на INFO для відладки
+    level=logging.INFO  # Установите уровень логирования на INFO для отладки
 )
 logger = logging.getLogger(__name__)
 
-# Емодзі для різних станів погоди
+# Эмодзи для различных погодных условий
 weather_emojis = {
     "ясно": "☀️",
-    "перемінна хмарність": "⛅️",
-    "хмарно з проясненнями": "🌤",
-    "хмарно": "☁️",
+    "переменная облачность": "⛅️",
+    "облачно с прояснениями": "🌤",
+    "облачно": "☁️",
     "пасмурно": "☁️",
-    "дощ": "🌧",
+    "дождь": "🌧",
     "гроза": "⛈",
-    "сніг": "❄️",
+    "снег": "❄️",
     "туман": "🌫"
 }
 
-# Кеш для даних про погоду
+# Кеш для данных о погоде
 weather_cache = TTLCache(maxsize=100, ttl=600)
 
 # Путь к файлу для хранения данных
 USER_DATA_FILE = 'user_data.json'
 
-# Функція для отримання емодзі за описом погоди
+# Функция для получения эмодзи по описанию погоды
 def get_weather_emoji(description):
     for key in weather_emojis:
         if key in description:
             return weather_emojis[key]
     return ""
 
-# Асинхронна функція для отримання погоди з OpenWeatherMap API
+# Асинхронная функция для получения погоды из OpenWeatherMap API
 async def get_weather(city):
     if not city:
-        return "Назва міста не може бути порожньою."
+        return "Название города не может быть пустым."
 
     if city in weather_cache:
         return weather_cache[city]
@@ -80,37 +80,36 @@ async def get_weather(city):
 
                     weather_info = (
                         f"Погода в {city}:\n"
-                        f"Опис: {weather} {weather_emoji}\n"
+                        f"Описание: {weather} {weather_emoji}\n"
                         f"Температура: {temp}°C 🌡️\n"
-                        f"Відчувається як: {feels_like}°C 🌡️\n"
-                        f"Вологість: {humidity}% 💧\n"
-                        f"Тиск: {pressure} hPa 🌬️\n"
+                        f"Ощущается как: {feels_like}°C 🌡️\n"
+                        f"Влажность: {humidity}% 💧\n"
+                        f"Давление: {pressure} hPa 🌬️\n"
                         f"😃"
                     )
                     weather_cache[city] = weather_info
                     return weather_info
                 elif response.status == 404:
-                    return "Місто не знайдено. Перевірте правильність вводу."
+                    return "Город не найден. Проверьте правильность ввода."
                 else:
-                    return "Не вдалося отримати дані про погоду."
+                    return "Не удалось получить данные о погоде."
     except (asyncio.TimeoutError, ClientError, ServerTimeoutError) as e:
-        logger.error(f"Помилка при отриманні даних про погоду: {e}")
-        return "Сталася помилка при отриманні даних про погоду. Спробуйте знову пізніше."
+        logger.error(f"Ошибка при получении данных о погоде: {e}")
+        return "Произошла ошибка при получении данных о погоде. Попробуйте снова позже."
 
-# Функція для збереження даних користувача в файл JSON
+# Функция для сохранения данных пользователя в файл JSON
 def save_user_data(user_id, city):
+    data = {}
     if os.path.exists(USER_DATA_FILE):
         with open(USER_DATA_FILE, 'r', encoding='utf-8') as file:
             data = json.load(file)
-    else:
-        data = {}
-
-    data[user_id] = {'city': city}
+    
+    data[str(user_id)] = {'city': city}
 
     with open(USER_DATA_FILE, 'w', encoding='utf-8') as file:
         json.dump(data, file, indent=4, ensure_ascii=False)
 
-# Функція для зчитування даних користувача з файлу JSON
+# Функция для чтения данных пользователя из файла JSON
 def load_user_data(user_id):
     if os.path.exists(USER_DATA_FILE):
         with open(USER_DATA_FILE, 'r', encoding='utf-8') as file:
@@ -118,50 +117,50 @@ def load_user_data(user_id):
             return data.get(str(user_id), None)
     return None
 
-# Асинхронна функція для відправлення повідомлень з повторними спробами
+# Асинхронная функция для отправки сообщений с повторными попытками
 async def send_message_with_retries(bot, chat_id, text, retries=3, delay=5):
     for attempt in range(retries):
         try:
             await bot.send_message(chat_id, text=text)
             return
         except TimedOut:
-            logger.error(f"Помилка таймауту при відправленні повідомлення. Спроба {attempt + 1} з {retries}.")
+            logger.error(f"Ошибка таймаута при отправке сообщения. Попытка {attempt + 1} из {retries}.")
             if attempt < retries - 1:
                 await asyncio.sleep(delay)
             else:
-                logger.error("Не вдалося відправити повідомлення після кількох спроб.")
+                logger.error("Не удалось отправить сообщение после нескольких попыток.")
 
-# Функція для обробки команди /start
+# Функция для обработки команды /start
 async def start(update: Update, context):
-    logger.info(f"Команда /start отримана від користувача {update.effective_user.id}")
+    logger.info(f"Команда /start получена от пользователя {update.effective_user.id}")
     bot = context.bot
-    await send_message_with_retries(bot, update.effective_chat.id, "Привіт! Я бот для отримання погоди. Просто введи назву міста українською мовою, щоб дізнатися погоду. 😃")
+    await send_message_with_retries(bot, update.effective_chat.id, "Привет! Я бот для получения погоды. Просто введи название города на украинском языке, чтобы узнать погоду. 😃")
 
-# Функція для обробки текстових повідомлень та надання прогнозу погоди
+# Функция для обработки текстовых сообщений и предоставления прогноза погоды
 async def get_weather_update(update: Update, context):
-    logger.info(f"Отримано повідомлення від користувача {update.effective_user.id}")
+    logger.info(f"Получено сообщение от пользователя {update.effective_user.id}")
     city = update.message.text
     user_id = update.effective_user.id
 
-    # Збережемо місто користувача в JSON файл
+    # Сохраним город пользователя в JSON файл
     save_user_data(user_id, city)
 
-    context.user_data['city'] = city  # Збережемо місто для оновлень
-    context.user_data['chat_id'] = update.effective_chat.id  # Збережемо chat_id для оновлень
+    context.user_data['city'] = city  # Сохраним город для обновлений
+    context.user_data['chat_id'] = update.effective_chat.id  # Сохраним chat_id для обновлений
     weather_info = await get_weather(city)
     bot = context.bot
 
     await send_message_with_retries(bot, update.effective_chat.id, weather_info)
-    # Повідомлення про наступне оновлення прогнозу
-    await send_message_with_retries(bot, update.effective_chat.id, "Наступне оновлення прогнозу через 2 години. 🌦️")
+    # Сообщение о следующем обновлении прогноза
+    await send_message_with_retries(bot, update.effective_chat.id, "Следующее обновление прогноза через 2 часа. 🌦️")
 
-    # Налаштуємо автоматичне оновлення прогнозу, уникнувши дублювання завдань
+    # Настроим автоматическое обновление прогноза, избегая дублирования задач
     if 'job' in context.user_data:
         context.user_data['job'].schedule_removal()
     job = context.job_queue.run_repeating(send_weather_update, interval=7200, first=7200, data=context.user_data)
     context.user_data['job'] = job
 
-# Функція для відправки оновленого прогнозу погоди
+# Функция для отправки обновленного прогноза погоды
 async def send_weather_update(context):
     job = context.job
     city = job.data['city']
@@ -171,13 +170,13 @@ async def send_weather_update(context):
     await send_message_with_retries(bot, chat_id, weather_info)
 
 def main():
-    # Створення бота та додавання обробників
+    # Создание бота и добавление обработчиков
     application = Application.builder().token(TELEGRAM_TOKEN).build()
 
-    # Обробник команд /start
+    # Обработчик команды /start
     application.add_handler(CommandHandler("start", start))
 
-    # Обробник текстових повідомлень та команд
+    # Обработчик текстовых сообщений и команд
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, get_weather_update))
 
     # Запуск бота
