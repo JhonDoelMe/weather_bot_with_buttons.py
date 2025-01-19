@@ -110,7 +110,7 @@ async def send_message_with_retries(bot, chat_id, text, retries=3, delay=5, repl
 async def start(update: Update, context):
     logger.info(f"Команда /start получена от пользователя {update.effective_user.id}")
     bot = context.bot
-    keyboard = create_keyboard()  # Создаём клавиатуру с кнопками
+    keyboard = create_keyboard()  # Создаём клавиатуру
     await send_message_with_retries(
         bot,
         update.effective_chat.id,
@@ -126,8 +126,9 @@ async def get_weather_update(update: Update, context):
     context.user_data['chat_id'] = update.effective_chat.id
     weather_info = await get_weather(city)
     bot = context.bot
+    keyboard = create_keyboard()  # Создаём клавиатуру
 
-    await send_message_with_retries(bot, update.effective_chat.id, weather_info)
+    await send_message_with_retries(bot, update.effective_chat.id, weather_info, reply_markup=keyboard)
 
 def main():
     # Создание приложения
