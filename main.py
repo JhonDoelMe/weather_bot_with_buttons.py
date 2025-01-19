@@ -82,7 +82,7 @@ async def send_daily_weather_update(context: CallbackContext):
 
 def schedule_daily_weather_update(context: CallbackContext, chat_id, user_timezone):
     target_time = time(hour=8, minute=0, tzinfo=user_timezone)
-    context.job_queue.run_daily(send_daily_weather_update, target_time, context={'chat_id': chat_id, 'user_id': chat_id})
+    context.job_queue.run_daily(send_daily_weather_update, target_time, data={'chat_id': chat_id, 'user_id': chat_id})
 
 async def auto_update(context: CallbackContext):
     job = context.job
