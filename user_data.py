@@ -6,8 +6,15 @@ logger = logging.getLogger(__name__)
 
 USER_DATA_FILE = 'user_data.json'
 
+# Проверка существования и инициализация пустого файла
+if not os.path.exists(USER_DATA_FILE):
+    with open(USER_DATA_FILE, 'w', encoding='utf-8') as file:
+        json.dump({}, file, indent=4, ensure_ascii=False)
+
 def read_user_data():
     if os.path.exists(USER_DATA_FILE):
+        if os.stat(USER_DATA_FILE).st_size == 0:  # Проверка на пустоту файла
+            return {}
         try:
             with open(USER_DATA_FILE, 'r', encoding='utf-8') as file:
                 return json.load(file)

@@ -6,7 +6,7 @@ from cachetools import TTLCache
 from aiohttp import ClientError, ServerTimeoutError
 from message_utils import send_message_with_retries
 from config import WEATHER_API_KEY
-from user_data import save_user_data
+from user_data import save_user_data, load_user_data
 
 logger = logging.getLogger(__name__)
 
