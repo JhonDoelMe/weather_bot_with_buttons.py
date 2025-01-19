@@ -8,6 +8,14 @@ from config import CURRENCY_API_KEY
 
 logger = logging.getLogger(__name__)
 
+currency_emojis = {
+    "USD": "🇺🇸",  # Флаг США
+    "EUR": "🇪🇺",  # Флаг Европейского Союза
+    "GBP": "🇬🇧",  # Флаг Великобритании
+    "JPY": "🇯🇵",  # Флаг Японии
+    "RUB": "🇷🇺"   # Флаг России
+}
+
 async def get_currency_rate(query: CallbackQuery, context: CallbackContext):
     url = f"https://openexchangerates.org/api/latest.json?app_id={CURRENCY_API_KEY}"
     chat_id = query.message.chat_id
@@ -24,11 +32,11 @@ async def get_currency_rate(query: CallbackQuery, context: CallbackContext):
                     uah_rate = rates['UAH']
                     message = (
                         f"Курс гривны (UAH):\n"
-                        f"USD: {1 / rates['USD'] * uah_rate:.2f}\n"
-                        f"EUR: {1 / rates['EUR'] * uah_rate:.2f}\n"
-                        f"GBP: {1 / rates['GBP'] * uah_rate:.2f}\n"
-                        f"JPY: {1 / rates['JPY'] * uah_rate:.2f}\n"
-                        f"RUB: {1 / rates['RUB'] * uah_rate:.2f}\n"
+                        f"USD: {1 / rates['USD'] * uah_rate:.2f} {currency_emojis['USD']}\n"
+                        f"EUR: {1 / rates['EUR'] * uah_rate:.2f} {currency_emojis['EUR']}\n"
+                        f"GBP: {1 / rates['GBP'] * uah_rate:.2f} {currency_emojis['GBP']}\n"
+                        f"JPY: {1 / rates['JPY'] * uah_rate:.2f} {currency_emojis['JPY']}\n"
+                        f"RUB: {1 / rates['RUB'] * uah_rate:.2f} {currency_emojis['RUB']}\n"
                     )
                     await send_message_with_retries(context.bot, chat_id, message)
                 else:

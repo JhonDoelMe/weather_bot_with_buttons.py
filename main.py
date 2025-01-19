@@ -1,8 +1,8 @@
 import logging
-from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 from config import TELEGRAM_TOKEN
-from weather import get_weather_update
+from user_data import save_user_data, load_user_data
 from buttons import show_menu, button
 from message_utils import send_message_with_retries
 
@@ -14,12 +14,31 @@ logger = logging.getLogger(__name__)
 
 async def start(update: Update, context):
     try:
-        logger.info(f"Команда /start получена от пользователя {update.effective_user.id}")
-        await send_message_with_retries(context.bot, update.effective_chat.id, "Привет! Я бот для получения погоды и курса гривны. Просто введи название города на украинском языке, чтобы узнать погоду. 😃\nДля просмотра меню нажмите /menu.")
+        user_id = update.effective_user.id
+        logger.info(f"Команда /start получена от пользователя {user_id}")
+        save_user_data(user_id, city=None)
+        await send_message_with_retries(context.bot, update.effective_chat.id, "Привет! Я бот для получения погоды и курса гривны. Просто выберите нужную опцию. 😃")
         await show_menu(update, context)
     except Exception as e:
         logger.error(f"Ошибка в функции start: {e}")
         await send_message_with_retries(context.bot, update.effective_chat.id, "Произошла ошибка. Попробуйте снова позже.")
+
+async def request_city(update: Update, context):
+    user_id = update.effective_user.id
+    chat_id = update.effective_chat.id
+    await send_message_with_retries(context.bot, chat_id, "Пожалуйста, введите название города:")
+    context.user_data['waiting_for_city'] = True
+
+async def save_city(update: Update, context):
+    if context.user_data.get('waiting_for_city'):
+        city = update.message.text
+        user_id = update.effective_user.id
+        save_user_data(user_id, city)
+        context.user_data['waiting_for_city'] = False
+        await send_message_with_retries(context.bot, update.effective_chat.id, f"Город {city} сохранен для пользователя {user_id}.")
+        await show_menu(update, context)
+    else:
+        await button(update, context)
 
 def main():
     logger.info("Запуск бота...")
@@ -30,9 +49,9 @@ def main():
     
     logger.info("Добавление обработчика команды /menu")
     application.add_handler(CommandHandler("menu", show_menu))
-    
+
     logger.info("Добавление обработчика текстовых сообщений")
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, button))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, save_city))
     
     logger.info("Запуск опроса...")
     application.run_polling()

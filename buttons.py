@@ -3,6 +3,7 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import CallbackContext
 from weather import get_weather_update
 from currency import get_currency_rate
+from main import request_city
 
 logger = logging.getLogger(__name__)
 
@@ -22,8 +23,8 @@ async def button(update, context: CallbackContext):
     logger.info(f"Нажата кнопка: {text}")
     try:
         if text == 'Погода':
-            await get_weather_update(update, context)
+            await request_city(update, context)
         elif text == 'Курс гривны':
-            await get_currency_rate(update, context)
+            await get_currency_rate(update.callback_query, context)
     except Exception as e:
         logger.error(f"Ошибка при обработке кнопки: {e}")
