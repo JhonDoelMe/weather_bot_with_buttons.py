@@ -4,6 +4,7 @@ from telegram.ext import CallbackContext
 from weather import get_weather_update
 from currency import get_currency_rate
 from utils import request_city
+from user_data import load_user_data  # Добавлен импорт
 
 logger = logging.getLogger(__name__)
 
