@@ -3,7 +3,7 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 from config import TELEGRAM_TOKEN
 from user_data import save_user_data, load_user_data
-from menu import show_menu, button  # Обновлен импорт
+from menu import show_menu, button
 from message_utils import send_message_with_retries
 from utils import request_city
 from weather import get_weather
