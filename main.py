@@ -1,16 +1,16 @@
 import logging
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 from config import TELEGRAM_TOKEN
 from user_data import save_user_data, load_user_data
 from buttons import show_menu, button
 from message_utils import send_message_with_retries
 from utils import request_city
-from weather import get_weather  # Добавлен импорт
+from weather import get_weather
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    level=logging.INFO
+    format='%(asctime)s - %(name)s - %(уровеньname)s - %(message)s',
+    уровень=logging.INFO
 )
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,7 @@ async def start(update: Update, context):
     except Exception as e:
         logger.error(f"Ошибка в функции start: {e}")
         await send_message_with_retries(context.bot, update.effective_chat.id, "Произошла ошибка. Попробуйте снова позже.")
+    schedule_auto_update(context, update.effective_chat.id)
 
 async def save_city(update: Update, context):
     if context.user_data.get('waiting_for_city'):
@@ -37,11 +38,27 @@ async def save_city(update: Update, context):
         await show_menu(update, context)
     else:
         await button(update, context)
+    schedule_auto_update(context, update.effective_chat.id)
+
+async def auto_update(context: CallbackContext):
+    job = context.job
+    city = job.data.get('city')
+    chat_id = job.data.get('chat_id')
+    if city:
+        weather_info = await get_weather(city)
+        await send_message_with_retries(context.bot, chat_id, weather_info)
+
+def schedule_auto_update(context: CallbackContext, chat_id):
+    job_queue = context.job_queue
+    user_data = load_user_data(chat_id)
+    city = user_data.get('city') if user_data else None
+    if city:
+        job_queue.run_repeating(auto_update, interval=7200, first=7200, context={'chat_id': chat_id, 'city': city})
 
 def main():
     logger.info("Запуск бота...")
     application = Application.builder().token(TELEGRAM_TOKEN).build()
-    
+
     logger.info("Добавление обработчика команды /start")
     application.add_handler(CommandHandler("start", start))
     
