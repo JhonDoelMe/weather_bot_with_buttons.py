@@ -19,13 +19,14 @@ async def get_currency_rate(query: CallbackQuery, context: CallbackContext):
                 if response.status == 200:
                     data = await response.json()
                     rates = data['rates']
+                    uah_rate = rates['UAH']
                     message = (
-                        f"Курсы валют по отношению к USD:\n"
-                        f"EUR: {rates['EUR']}\n"
-                        f"GBP: {rates['GBP']}\n"
-                        f"JPY: {rates['JPY']}\n"
-                        f"UAH: {rates['UAH']}\n"
-                        f"RUB: {rates['RUB']}\n"
+                        f"Курс гривны (UAH):\n"
+                        f"USD: {1 / rates['USD'] * uah_rate}\n"
+                        f"EUR: {1 / rates['EUR'] * uah_rate}\n"
+                        f"GBP: {1 / rates['GBP'] * uah_rate}\n"
+                        f"JPY: {1 / rates['JPY'] * uah_rate}\n"
+                        f"RUB: {1 / rates['RUB'] * uah_rate}\n"
                     )
                     await send_message_with_retries(context.bot, chat_id, message)
                 else:

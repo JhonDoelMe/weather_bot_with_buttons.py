@@ -1,38 +1,26 @@
 import logging
-from telegram import Update, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import CallbackContext
 from weather import get_weather_update
 from currency import get_currency_rate
 
 logger = logging.getLogger(__name__)
 
+def build_menu(buttons, n_cols):
+    menu = [buttons[i:i + n_cols] for i in range(0, len(buttons), n_cols)]
+    return menu
+
 async def show_menu(update, context):
-    keyboard = [
-        [
-            InlineKeyboardButton("Погода", callback_data='weather'),
-            InlineKeyboardButton("Курсы валют", callback_data='currency')
-        ]
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
+    buttons = [['Погода', 'Курс гривны']]
+    keyboard = ReplyKeyboardMarkup(build_menu(buttons, n_cols=2), resize_keyboard=True)
     if update.message:
-        await update.message.reply_text('Выберите опцию:', reply_markup=reply_markup)
+        await update.message.reply_text('Выберите опцию:', reply_markup=keyboard)
     elif update.callback_query:
-        await update.callback_query.message.reply_text('Выберите опцию:', reply_markup=reply_markup)
+        await update.callback_query.message.reply_text('Выберите опцию:', reply_markup=keyboard)
 
 async def button(update, context: CallbackContext):
-    query = update.callback_query
-    await query.answer()
-    if query.data == 'weather':
-        await get_weather_update_callback(update, context)
-    elif query.data == 'currency':
-        await get_currency_rate_callback(update, context)
-
-async def get_weather_update_callback(update: Update, context: CallbackContext):
-    query = update.callback_query
-    await get_weather_update(query, context)
-    await show_menu(update, context)  # Постоянное отображение меню
-
-async def get_currency_rate_callback(update: Update, context: CallbackContext):
-    query = update.callback_query
-    await get_currency_rate(query, context)
-    await show_menu(update, context)  # Постоянное отображение меню
+    text = update.message.text
+    if text == 'Погода':
+        await get_weather_update(update, context)
+    elif text == 'Курс гривны':
+        await get_currency_rate(update, context)
