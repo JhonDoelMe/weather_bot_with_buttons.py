@@ -1,12 +1,13 @@
 import aiohttp
 import logging
 from telegram import Update
+from telegram.ext import CallbackContext
 from message_utils import send_message_with_retries
 from config import CURRENCY_API_KEY
 
 logger = logging.getLogger(__name__)
 
-async def get_currency_rate(update: Update, context):
+async def get_currency_rate(update: Update, context: CallbackContext):
     url = f"https://openexchangerates.org/api/latest.json?app_id={CURRENCY_API_KEY}"
 
     try:

@@ -1,12 +1,14 @@
 import aiohttp
-import asyncio
+import logging
 from telegram import Update
-from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from telegram.ext import CallbackContext
 from cachetools import TTLCache
 from aiohttp import ClientError, ServerTimeoutError
 from message_utils import send_message_with_retries
 from config import WEATHER_API_KEY
 from user_data import save_user_data
+
+logger = logging.getLogger(__name__)
 
 weather_emojis = {
     "ясно": "☀️",
@@ -68,7 +70,7 @@ async def get_weather(city):
         logger.error(f"Ошибка при получении данных о погоде: {e}")
         return "Произошла ошибка при получении данных о погоде. Попробуйте снова позже."
 
-async def get_weather_update(update: Update, context):
+async def get_weather_update(update: Update, context: CallbackContext):
     logger.info(f"Получено сообщение от пользователя {update.effective_user.id}")
     city = update.message.text
     user_id = update.effective_user.id
@@ -88,7 +90,7 @@ async def get_weather_update(update: Update, context):
     job = context.job_queue.run_repeating(send_weather_update, interval=7200, first=7200, data=context.user_data)
     context.user_data['job'] = job
 
-async def send_weather_update(context):
+async def send_weather_update(context: CallbackContext):
     job = context.job
     city = job.data['city']
     chat_id = job.data['chat_id']

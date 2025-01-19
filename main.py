@@ -8,7 +8,7 @@ from message_utils import send_message_with_retries
 
 # Настройка логирования
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
@@ -16,8 +16,7 @@ logger = logging.getLogger(__name__)
 # Функция для обработки команды /start
 async def start(update: Update, context):
     logger.info(f"Команда /start получена от пользователя {update.effective_user.id}")
-    bot = context.bot
-    await send_message_with_retries(bot, update.effective_chat.id, "Привет! Я бот для получения погоды и курсов валют. Просто введи название города на украинском языке, чтобы узнать погоду. 😃\nДля просмотра меню нажмите /menu.")
+    await send_message_with_retries(context.bot, update.effective_chat.id, "Привет! Я бот для получения погоды и курсов валют. Просто введи название города на украинском языке, чтобы узнать погоду. 😃\nДля просмотра меню нажмите /menu.")
 
 def main():
     # Создание бота и добавление обработчиков

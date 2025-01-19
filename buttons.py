@@ -1,6 +1,5 @@
 import logging
 from telegram import InlineKeyboardMarkup, InlineKeyboardButton
-from message_utils import send_message_with_retries
 from weather import get_weather_update
 from currency import get_currency_rate
 
