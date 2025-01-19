@@ -1,17 +1,17 @@
 import aiohttp
 import asyncio
 import logging
-from telegram import Update
+from telegram import Update, CallbackQuery
 from telegram.ext import CallbackContext
 from message_utils import send_message_with_retries
 from config import CURRENCY_API_KEY
 
 logger = logging.getLogger(__name__)
 
-async def get_currency_rate(update: Update, context: CallbackContext):
+async def get_currency_rate(query: CallbackQuery, context: CallbackContext):
     url = f"https://openexchangerates.org/api/latest.json?app_id={CURRENCY_API_KEY}"
 
-    chat_id = update.callback_query.message.chat_id
+    chat_id = query.message.chat_id
 
     try:
         async with aiohttp.ClientSession() as session:

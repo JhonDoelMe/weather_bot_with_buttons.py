@@ -26,8 +26,8 @@ async def button(update, context: CallbackContext):
 
 async def get_weather_update_callback(update: Update, context: CallbackContext):
     query = update.callback_query
-    await get_weather_update(Update(update.callback_query), context)
+    await get_weather_update(query, context)
 
 async def get_currency_rate_callback(update: Update, context: CallbackContext):
     query = update.callback_query
-    await get_currency_rate(Update(update.callback_query), context)
+    await get_currency_rate(query, context)
