@@ -1,20 +1,5 @@
-from telegram import ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import CallbackContext, CommandHandler, MessageHandler, filters
-
-# Функция для создания клавиатуры
-def create_keyboard():
-    # Создаём разметку для клавиатуры
-    keyboard = [
-        [KeyboardButton("Обновить")],  # Первая строка с одной кнопкой
-        [KeyboardButton("Мой город"), KeyboardButton("Изменить город")]  # Вторая строка с двумя кнопками
-    ]
-    return ReplyKeyboardMarkup(keyboard, resize_keyboard=True, one_time_keyboard=False)
-
-# Функция для регистрации обработчиков кнопок
-def register_handlers(application):
-    application.add_handler(MessageHandler(filters.Regex("Обновить"), update_weather))
-    application.add_handler(MessageHandler(filters.Regex("Мой город"), show_city))
-    application.add_handler(MessageHandler(filters.Regex("Изменить город"), change_city))
+from telegram import InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import CallbackQueryHandler
 
 # Обработчик кнопки "Обновить"
 async def update_weather(update, context):
@@ -24,7 +9,7 @@ async def update_weather(update, context):
         keyboard = create_keyboard()  # Пересоздаём клавиатуру
         await update.message.reply_text(weather_info, reply_markup=keyboard)
     else:
-        await update.message.reply_text("Пожалуйста, введите город с помощью команды /start или /setcity.", reply_markup=create_keyboard())
+        await update.message.reply_text("Пожалуйста, введите город с помощью команды /setcity или /start.", reply_markup=create_keyboard())
 
 # Обработчик кнопки "Мой город"
 async def show_city(update, context):
@@ -40,3 +25,12 @@ async def show_city(update, context):
 async def change_city(update, context):
     await update.message.reply_text("Пожалуйста, введите новый город:", reply_markup=create_keyboard())
     return "WAITING_FOR_CITY"
+
+# Создание клавиатуры
+def create_keyboard():
+    keyboard = [
+        [InlineKeyboardButton("Обновить", callback_data="update"),
+         InlineKeyboardButton("Мой город", callback_data="my_city"),
+         InlineKeyboardButton("Изменить город", callback_data="change_city")]
+    ]
+    return InlineKeyboardMarkup(keyboard)
