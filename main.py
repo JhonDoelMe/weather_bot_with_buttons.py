@@ -1,6 +1,8 @@
 import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
+from datetime import time, datetime, timedelta
+from pytz import timezone
 from config import TELEGRAM_TOKEN
 from user_data import save_user_data, load_user_data
 from menu import show_menu, button
@@ -30,6 +32,7 @@ async def start(update: Update, context):
             context.user_data['waiting_for_city'] = True
         
         await show_menu(update, context)
+        schedule_daily_weather_update(context, update.effective_chat.id, timezone('Europe/Kiev'))  # Установите ваш часовой пояс
     except Exception as e:
         logger.error(f"Ошибка в функции start: {e}")
         await send_message_with_retries(context.bot, update.effective_chat.id, "Произошла ошибка. Попробуйте снова позже.")
@@ -49,6 +52,7 @@ async def save_city(update: Update, context):
         weather_info = await get_weather(city)
         await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
         await show_menu(update, context)
+        schedule_daily_weather_update(context, update.effective_chat.id, timezone('Europe/Kiev'))  # Установите ваш часовой пояс
     elif context.user_data.get('waiting_for_new_city'):
         new_city = update.message.text
         if new_city.lower() in ['погода', 'курс гривны', 'изменить город']:  # Добавим проверку на текст кнопок
@@ -62,9 +66,27 @@ async def save_city(update: Update, context):
         weather_info = await get_weather(new_city)
         await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
         await show_menu(update, context)
+        schedule_daily_weather_update(context, update.effective_chat.id, timezone('Europe/Kiev'))  # Установите ваш часовой пояс
     else:
         await button(update, context)
     schedule_auto_update(context, update.effective_chat.id)
+
+async def send_daily_weather_update(context: CallbackContext):
+    job = context.job
+    user_id = job.context['user_id']
+    user_data = load_user_data(user_id)
+    if user_data and user_data.get('city'):
+        city = user_data['city']
+        weather_info = await get_weather(city)
+        await send_message_with_retries(context.bot, job.context['chat_id'], weather_info)
+
+def schedule_daily_weather_update(context: CallbackContext, chat_id, user_timezone):
+    now = datetime.now(user_timezone)
+    target_time = now.replace(hour=8, minute=0, second=0, microsecond=0)
+    if now > target_time:
+        target_time += timedelta(days=1)
+    delay = (target_time - now).total_seconds()
+    context.job_queue.run_daily(send_daily_weather_update, time(hour=8, minute=0, tzinfo=user_timezone), context={'chat_id': chat_id, 'user_id': chat_id})
 
 async def auto_update(context: CallbackContext):
     job = context.job
