@@ -4,13 +4,13 @@ from telegram.ext import CallbackContext
 from weather import get_weather_update, get_weather
 from currency import get_currency_rate
 from utils import request_city
-from user_data import load_user_data
-from message_utils import send_message_with_retries  # Добавлен импорт
+from user_data import load_user_data, save_user_data
+from message_utils import send_message_with_retries
 
 logger = logging.getLogger(__name__)
 
 async def show_menu(update, context):
-    buttons = [[KeyboardButton('Погода'), KeyboardButton('Курс гривны')]]
+    buttons = [[KeyboardButton('Погода'), KeyboardButton('Курс гривны'), KeyboardButton('Изменить город')]]
     keyboard = ReplyKeyboardMarkup(buttons, resize_keyboard=True)
     try:
         if update.message:
@@ -34,5 +34,18 @@ async def button(update, context: CallbackContext):
                 await request_city(update, context)
         elif text == 'Курс гривны':
             await get_currency_rate(update, context)
+        elif text == 'Изменить город':
+            await change_city(update, context)
     except Exception as e:
         logger.error(f"Ошибка при обработке кнопки: {e}")
+
+async def change_city(update, context: CallbackContext):
+    user_data = load_user_data(update.effective_user.id)
+    if user_data and user_data['city']:
+        current_city = user_data['city']
+        await send_message_with_retries(context.bot, update.effective_chat.id, f"Текущий город: {current_city}")
+        await send_message_with_retries(context.bot, update.effective_chat.id, "Введите новый город:")
+        context.user_data['waiting_for_new_city'] = True
+    else:
+        await send_message_with_retries(context.bot, update.effective_chat.id, "Город не установлен. Введите новый город:")
+        context.user_data['waiting_for_new_city'] = True
