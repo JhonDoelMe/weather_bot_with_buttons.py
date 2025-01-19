@@ -17,9 +17,18 @@ logger = logging.getLogger(__name__)
 async def start(update: Update, context):
     try:
         user_id = update.effective_user.id
-        logger.info(f"Команда /start получена от пользователя {user_id}")
-        save_user_data(user_id, city=None)
-        await send_message_with_retries(context.bot, update.effective_chat.id, "Привет! Я бот для получения погоды и курса гривны. Просто выберите нужную опцию. 😃")
+        user_data = load_user_data(user_id)
+        
+        if user_data and user_data.get('city'):
+            city = user_data['city']
+            await send_message_with_retries(context.bot, update.effective_chat.id, f"С возвращением! Ваш текущий город: {city}.")
+            weather_info = await get_weather(city)
+            await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
+        else:
+            save_user_data(user_id, city=None)
+            await send_message_with_retries(context.bot, update.effective_chat.id, "Привет! Я бот для получения погоды и курса гривны. Пожалуйста, введите название города:")
+            context.user_data['waiting_for_city'] = True
+        
         await show_menu(update, context)
     except Exception as e:
         logger.error(f"Ошибка в функции start: {e}")
