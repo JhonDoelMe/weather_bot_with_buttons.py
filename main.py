@@ -8,7 +8,7 @@ from message_utils import send_message_with_retries
 
 # Настройка логирования
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Исправлено 'levellevel' на 'levelname'
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
