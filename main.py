@@ -4,6 +4,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, CallbackQu
 from config import TELEGRAM_TOKEN
 from weather import get_weather_update
 from buttons import show_menu, button
+from message_utils import send_message_with_retries
 
 # Настройка логирования
 logging.basicConfig(
