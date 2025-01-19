@@ -1,5 +1,5 @@
 import logging
-from telegram import Update, ReplyKeyboardMarkup
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import CallbackContext
 from weather import get_weather_update
 from currency import get_currency_rate
@@ -11,7 +11,7 @@ def build_menu(buttons, n_cols):
     return menu
 
 async def show_menu(update, context):
-    buttons = [['Погода', 'Курс гривны']]
+    buttons = [[KeyboardButton('Погода'), KeyboardButton('Курс гривны')]]
     keyboard = ReplyKeyboardMarkup(build_menu(buttons, n_cols=2), resize_keyboard=True)
     if update.message:
         await update.message.reply_text('Выберите опцию:', reply_markup=keyboard)
