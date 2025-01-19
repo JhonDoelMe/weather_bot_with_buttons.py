@@ -74,22 +74,24 @@ async def get_weather_update(update: Update, context: CallbackContext):
     if isinstance(update, CallbackQuery):
         query = update
         user_id = query.from_user.id
+        chat_id = query.message.chat_id
         city = context.user_data.get('city', 'Неизвестно')
     else:
         city = update.message.text
         user_id = update.effective_user.id
+        chat_id = update.effective_chat.id
 
     logger.info(f"Получено сообщение от пользователя {user_id}: {city}")
 
     save_user_data(user_id, city)
 
     context.user_data['city'] = city
-    context.user_data['chat_id'] = update.effective_chat.id
+    context.user_data['chat_id'] = chat_id
     weather_info = await get_weather(city)
     bot = context.bot
 
-    await send_message_with_retries(bot, update.effective_chat.id, weather_info)
-    await send_message_with_retries(bot, update.effective_chat.id, "Следующее обновление прогноза через 2 часа. 🌦️")
+    await send_message_with_retries(bot, chat_id, weather_info)
+    await send_message_with_retries(bot, chat_id, "Следующее обновление прогноза через 2 часа. 🌦️")
 
     if 'job' in context.user_data:
         context.user_data['job'].schedule_removal()

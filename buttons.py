@@ -14,12 +14,25 @@ async def show_menu(update, context):
         ]
     ]
     reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text('Выберите опцию:', reply_markup=reply_markup)
+    if update.message:
+        await update.message.reply_text('Выберите опцию:', reply_markup=reply_markup)
+    elif update.callback_query:
+        await update.callback_query.message.reply_text('Выберите опцию:', reply_markup=reply_markup)
 
 async def button(update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
     if query.data == 'weather':
-        await get_weather_update(query, context)
+        await get_weather_update_callback(update, context)
     elif query.data == 'currency':
-        await get_currency_rate(query, context)
+        await get_currency_rate_callback(update, context)
+
+async def get_weather_update_callback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await get_weather_update(query, context)
+    await show_menu(update, context)  # Постоянное отображение меню
+
+async def get_currency_rate_callback(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await get_currency_rate(query, context)
+    await show_menu(update, context)  # Постоянное отображение меню
