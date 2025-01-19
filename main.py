@@ -38,6 +38,10 @@ async def start(update: Update, context):
 async def save_city(update: Update, context):
     if context.user_data.get('waiting_for_city'):
         city = update.message.text
+        if city.lower() in ['погода', 'курс гривны', 'изменить город']:  # Добавим проверку на текст кнопок
+            await send_message_with_retries(context.bot, update.effective_chat.id, "Некорректный ввод. Пожалуйста, введите название города:")
+            return
+        
         user_id = update.effective_user.id
         save_user_data(user_id, city)
         context.user_data['waiting_for_city'] = False
@@ -47,6 +51,10 @@ async def save_city(update: Update, context):
         await show_menu(update, context)
     elif context.user_data.get('waiting_for_new_city'):
         new_city = update.message.text
+        if new_city.lower() in ['погода', 'курс гривны', 'изменить город']:  # Добавим проверку на текст кнопок
+            await send_message_with_retries(context.bot, update.effective_chat.id, "Некорректный ввод. Пожалуйста, введите название нового города:")
+            return
+
         user_id = update.effective_user.id
         save_user_data(user_id, new_city)
         context.user_data['waiting_for_new_city'] = False
