@@ -23,8 +23,12 @@ async def button(update, context: CallbackContext):
     logger.info(f"Нажата кнопка: {text}")
     try:
         if text == 'Погода':
-            await request_city(update, context)
+            user_data = load_user_data(update.effective_user.id)
+            if user_data and user_data['city']:
+                await get_weather_update(update, context)
+            else:
+                await request_city(update, context)
         elif text == 'Курс гривны':
-            await get_currency_rate(update.callback_query, context)
+            await get_currency_rate(update, context)
     except Exception as e:
         logger.error(f"Ошибка при обработке кнопки: {e}")

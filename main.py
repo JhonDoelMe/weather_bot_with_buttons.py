@@ -31,6 +31,8 @@ async def save_city(update: Update, context):
         save_user_data(user_id, city)
         context.user_data['waiting_for_city'] = False
         await send_message_with_retries(context.bot, update.effective_chat.id, f"Город {city} сохранен для пользователя {user_id}.")
+        weather_info = await get_weather(city)
+        await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
         await show_menu(update, context)
     else:
         await button(update, context)
