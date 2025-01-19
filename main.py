@@ -1,7 +1,7 @@
 import logging
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
-from datetime import time
+from datetime import time, datetime, timedelta
 from pytz import timezone
 from config import TELEGRAM_TOKEN
 from user_data import save_user_data, load_user_data
@@ -33,6 +33,10 @@ async def start(update: Update, context):
         
         await show_menu(update, context)
         schedule_daily_weather_update(context, update.effective_chat.id, timezone('Europe/Kiev'))  # Установите ваш часовой пояс
+        
+        # Проверяем, получал ли пользователь уведомление
+        if not user_data or not user_data.get('notified'):
+            context.job_queue.run_once(send_notification, 300, data={'chat_id': update.effective_chat.id, 'user_id': user_id})
     except Exception as e:
         logger.error(f"Ошибка в функции start: {e}")
         await send_message_with_retries(context.bot, update.effective_chat.id, "Произошла ошибка. Попробуйте снова позже.")
@@ -53,6 +57,11 @@ async def save_city(update: Update, context):
         await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
         await show_menu(update, context)
         schedule_daily_weather_update(context, update.effective_chat.id, timezone('Europe/Kiev'))  # Установите ваш часовой пояс
+
+        # Проверяем, получал ли пользователь уведомление
+        user_data = load_user_data(user_id)
+        if not user_data.get('notified'):
+            context.job_queue.run_once(send_notification, 300, data={'chat_id': update.effective_chat.id, 'user_id': user_id})
     elif context.user_data.get('waiting_for_new_city'):
         new_city = update.message.text
         if new_city.lower() in ['погода', 'курс гривны', 'изменить город']:  # Добавим проверку на текст кнопок
@@ -67,9 +76,23 @@ async def save_city(update: Update, context):
         await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
         await show_menu(update, context)
         schedule_daily_weather_update(context, update.effective_chat.id, timezone('Europe/Kiev'))  # Установите ваш часовой пояс
+
+        # Проверяем, получал ли пользователь уведомление
+        user_data = load_user_data(user_id)
+        if not user_data.get('notified'):
+            context.job_queue.run_once(send_notification, 300, data={'chat_id': update.effective_chat.id, 'user_id': user_id})
     else:
         await button(update, context)
     schedule_auto_update(context, update.effective_chat.id)
+
+async def send_notification(context: CallbackContext):
+    job = context.job
+    user_id = job.data['user_id']
+    await send_message_with_retries(context.bot, job.data['chat_id'], "Вы будете получать прогноз погоды каждое утро в 8 часов.")
+    # Обновляем JSON, чтобы уведомление больше не отправлялось
+    user_data = load_user_data(user_id)
+    user_data['notified'] = True
+    save_user_data(user_id, user_data['city'], notified=True)
 
 async def send_daily_weather_update(context: CallbackContext):
     job = context.job
