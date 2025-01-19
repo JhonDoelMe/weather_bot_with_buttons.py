@@ -10,7 +10,7 @@ from utils import request_city
 from notifications import send_notification, send_daily_weather_update, schedule_daily_weather_update, schedule_auto_update
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Исправлена опечатка в 'levellevel'
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
