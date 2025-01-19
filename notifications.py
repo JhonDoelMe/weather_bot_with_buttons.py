@@ -14,7 +14,6 @@ async def send_notification(context: CallbackContext):
     await send_message_with_retries(context.bot, job.data['chat_id'], "Вы будете получать прогноз погоды каждое утро в 8 часов.")
     # Обновляем JSON, чтобы уведомление больше не отправлялось
     user_data = load_user_data(user_id)
-    user_data['notified'] = True
     save_user_data(user_id, user_data['city'], notified=True)
 
 async def send_daily_weather_update(context: CallbackContext):
