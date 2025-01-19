@@ -9,7 +9,8 @@ load_dotenv()
 # Получение токенов из переменных окружения
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 WEATHER_API_KEY = os.getenv("WEATHER_API_KEY")
+CURRENCY_API_KEY = os.getenv("CURRENCY_API_KEY")
 
 # Проверка наличия токенов
-if not TELEGRAM_TOKEN or not WEATHER_API_KEY:
+if not TELEGRAM_TOKEN or not WEATHER_API_KEY or not CURRENCY_API_KEY:
     raise ValueError("Необходимые токены отсутствуют. Убедитесь, что они указаны в файле .env")
