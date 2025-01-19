@@ -20,14 +20,6 @@ async def button(update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
     if query.data == 'weather':
-        await get_weather_update_callback(update, context)
+        await get_weather_update(query, context)
     elif query.data == 'currency':
-        await get_currency_rate_callback(update, context)
-
-async def get_weather_update_callback(update: Update, context: CallbackContext):
-    query = update.callback_query
-    await get_weather_update(query, context)
-
-async def get_currency_rate_callback(update: Update, context: CallbackContext):
-    query = update.callback_query
-    await get_currency_rate(query, context)
+        await get_currency_rate(query, context)
