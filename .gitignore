@@ -5,4 +5,6 @@ node_modules/
 
 # Добавляем .env
 .env
+
 user_data.json
+*.json

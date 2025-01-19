@@ -2,7 +2,8 @@ import os
 import logging
 import asyncio
 import aiohttp
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+import json  # Импортируем json
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler
 from telegram.error import TimedOut
 from dotenv import load_dotenv
@@ -114,13 +115,12 @@ async def get_weather(city):
 
 # Функция для создания клавиатуры с кнопками
 def get_keyboard():
-    return [
+    return ReplyKeyboardMarkup(
         [
-            InlineKeyboardButton("Обновить", callback_data='update_weather'),
-            InlineKeyboardButton("Мой город", callback_data='my_city'),
-            InlineKeyboardButton("Изменить город", callback_data='change_city')
-        ]
-    ]
+            [KeyboardButton("Обновить"), KeyboardButton("Мой город"), KeyboardButton("Изменить город")]
+        ],
+        one_time_keyboard=False
+    )
 
 # Обработчик callback для кнопок
 async def button(update: Update, context):
@@ -152,7 +152,7 @@ async def start(update: Update, context):
     # Отправка приветственного сообщения с клавиатурой
     await update.message.reply_text(
         "Привет! Я бот для получения погоды. Просто введи название города, чтобы узнать погоду.",
-        reply_markup=InlineKeyboardMarkup(get_keyboard())
+        reply_markup=get_keyboard()
     )
 
 # Обработчик для установки города
@@ -160,7 +160,7 @@ async def set_city(update: Update, context):
     city = update.message.text
     context.user_data['city'] = city  # Сохранение города
     save_user_data(context.user_data)  # Сохранение в файл
-    await update.message.reply_text(f"Ваш город установлен как: {city}", reply_markup=InlineKeyboardMarkup(get_keyboard()))
+    await update.message.reply_text(f"Ваш город установлен как: {city}", reply_markup=get_keyboard())
 
 # Основная функция для запуска бота
 def main():
@@ -172,9 +172,6 @@ def main():
 
     # Обработчик текстовых сообщений для установки города
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, set_city))
-
-    # Обработчик для кнопок
-    application.add_handler(CallbackQueryHandler(button))
 
     # Запуск бота
     application.run_polling()
