@@ -1,5 +1,8 @@
 import json
 import os
+import logging
+
+logger = logging.getLogger(__name__)
 
 DATA_FILE = 'user_data.json'
 
@@ -15,9 +18,9 @@ def save_user_data(user_id, city):
 
         with open(DATA_FILE, 'w', encoding='utf-8') as file:
             json.dump(data, file, ensure_ascii=False, indent=4)
-        print(f"Данные пользователя {user_id} сохранены успешно.")
+        logger.info(f"Данные пользователя {user_id} сохранены успешно.")
     except Exception as e:
-        print(f"Ошибка при сохранении данных пользователя: {e}")
+        logger.error(f"Ошибка при сохранении данных пользователя: {e}")
 
 def load_user_data(user_id):
     try:
@@ -28,8 +31,8 @@ def load_user_data(user_id):
         else:
             return None
     except json.JSONDecodeError:
-        print("Ошибка при загрузке данных пользователя: файл поврежден или пуст.")
+        logger.error("Ошибка при загрузке данных пользователя: файл поврежден или пуст.")
         return None
     except Exception as e:
-        print(f"Ошибка при загрузке данных пользователя: {e}")
+        logger.error(f"Ошибка при загрузке данных пользователя: {e}")
         return None

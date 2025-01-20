@@ -4,9 +4,9 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 from config import TELEGRAM_TOKEN
 from user_data import save_user_data, load_user_data
 from message_utils import send_message_with_retries
-from air_alarm import get_air_alarm_status  # Импортируем функцию для получения статуса воздушной тревоги
+from air_alarm import get_air_alarm_status
 from weather import get_weather
-from menu import show_menu, button, change_city, request_air_alarm  # Импортируем функции из модуля меню
+from menu import show_menu, button, change_city, request_air_alarm
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -86,7 +86,7 @@ def main():
     application.add_handler(CommandHandler("menu", show_menu))
 
     logger.info("Добавление обработчика CallbackQuery")
-    application.add_handler(CallbackQueryHandler(button))  # Добавлен обработчик CallbackQuery
+    application.add_handler(CallbackQueryHandler(button))
 
     logger.info("Добавление обработчика текстовых сообщений")
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, save_city))

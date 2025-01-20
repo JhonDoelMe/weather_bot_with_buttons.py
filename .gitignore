@@ -2,9 +2,7 @@
 node_modules/
 *.log
 *.pyc
-
-# Добавляем .env
-.env
-
-user_data.json
+__pycache__/
+*.env
 *.json
+user_data.json

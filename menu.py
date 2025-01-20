@@ -6,7 +6,7 @@ from currency import get_currency_rate
 from utils import request_city
 from user_data import load_user_data, save_user_data
 from message_utils import send_message_with_retries
-from air_alarm import get_air_alarm_status  # Оставляем только нужный импорт
+from air_alarm import get_air_alarm_status
 
 logger = logging.getLogger(__name__)
 
@@ -14,7 +14,7 @@ async def show_menu(update, context):
     buttons = [
         [KeyboardButton('Погода'), KeyboardButton('Курс гривны')],
         [KeyboardButton('Изменить город')],
-        [KeyboardButton('Тревога')]  # Оставляем только нужные кнопки
+        [KeyboardButton('Тревога')]
     ]
     keyboard = ReplyKeyboardMarkup(buttons, resize_keyboard=True)
     try:
@@ -42,7 +42,7 @@ async def button(update, context: CallbackContext):
             await get_currency_rate(update, context)
         elif text == 'Изменить город':
             await change_city(update, context)
-        elif text == 'Тревога':  # Обработчик для новой кнопки "Тревога"
+        elif text == 'Тревога':
             await request_air_alarm(update, context)
     except Exception as e:
         logger.error(f"Ошибка при обработке кнопки: {e}")

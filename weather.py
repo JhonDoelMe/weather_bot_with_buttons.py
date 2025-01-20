@@ -31,7 +31,7 @@ wind_directions = [
     "западный", "западно-северо-западный", "северо-западный", "северо-северо-западный"
 ]
 
-weather_cache = TTLCache(maxsize=500, ttl=600)  # Увеличен размер кэша
+weather_cache = TTLCache(maxsize=500, ttl=600)
 
 def get_weather_emoji(description):
     for key in weather_emojis:
@@ -40,7 +40,7 @@ def get_weather_emoji(description):
     return ""
 
 def escape_markdown_v2(text):
-    escape_chars = r'\_*[]()~`>#+-=|{}.!\\'  # Добавлено экранирование для обратного слэша
+    escape_chars = r'\_*[]()~`>#+-=|{}.!\\'
     return ''.join(f'\\{char}' if char in escape_chars else char for char in text)
 
 def convert_unix_to_time(unix_time, timezone):
@@ -100,7 +100,7 @@ async def get_weather(city):
                     time_dt = convert_unix_to_time(dt, timezone) if dt != 'N/A' else 'N/A'
                     time_sunrise = convert_unix_to_time(sunrise, timezone) if sunrise != 'N/A' else 'N/A'
                     time_sunset = convert_unix_to_time(sunset, timezone) if sunset != 'N/A' else 'N/A'
-                    timezone_hours = timezone / 3600  # Учитываем дробные временные зоны
+                    timezone_hours = timezone / 3600
 
                     weather_info = (
                         f"*Погода в {escape_markdown_v2(city)}:*\n\n"
