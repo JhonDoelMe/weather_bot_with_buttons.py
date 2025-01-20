@@ -6,15 +6,15 @@ DATA_FILE = 'user_data.json'
 def save_user_data(user_id, city):
     try:
         if os.path.exists(DATA_FILE) and os.path.getsize(DATA_FILE) > 0:
-            with open(DATA_FILE, 'r') as file:
+            with open(DATA_FILE, 'r', encoding='utf-8') as file:
                 data = json.load(file)
         else:
             data = {}
         
         data[str(user_id)] = {'city': city}
 
-        with open(DATA_FILE, 'w') as file:
-            json.dump(data, file)
+        with open(DATA_FILE, 'w', encoding='utf-8') as file:
+            json.dump(data, file, ensure_ascii=False, indent=4)
         print(f"Данные пользователя {user_id} сохранены успешно.")
     except Exception as e:
         print(f"Ошибка при сохранении данных пользователя: {e}")
@@ -22,7 +22,7 @@ def save_user_data(user_id, city):
 def load_user_data(user_id):
     try:
         if os.path.exists(DATA_FILE) and os.path.getsize(DATA_FILE) > 0:
-            with open(DATA_FILE, 'r') as file:
+            with open(DATA_FILE, 'r', encoding='utf-8') as file:
                 data = json.load(file)
             return data.get(str(user_id))
         else:
