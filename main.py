@@ -14,7 +14,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-INVALID_CITY_NAMES = ['погода', 'курс гривны', 'изменить город', 'Тревога']
+INVALID_CITY_NAMES = ['погода', 'курс гривны', 'изменить город', 'тревога']
 
 async def start(update: Update, context):
     try:
