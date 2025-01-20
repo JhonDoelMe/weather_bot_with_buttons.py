@@ -6,3 +6,4 @@ __pycache__/
 *.env
 *.json
 user_data.json
+cities_to_regions.json
