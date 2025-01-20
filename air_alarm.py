@@ -36,12 +36,14 @@ def parse_air_alarm_data(data):
     
     messages = []
     for alert in alerts:
-        region = alert.get("region")
-        status = alert.get("status")
-        if status == "active":
-            message = f"🔴 Внимание! Воздушная тревога в регионе: {region}."
-        else:
-            message = f"✅ Воздушная тревога снята в регионе: {region}."
-        messages.append(message)
+        region = alert.get("regionName")  # Используем 'regionName' для получения названия региона
+        active_alerts = alert.get("activeAlerts", [])
+        for active_alert in active_alerts:
+            type = active_alert.get("type")
+            if type == "AIR":
+                message = f"🔴 Внимание! Воздушная тревога в регионе: {region}."
+            else:
+                message = f"⚠️ Тревога '{type}' в регионе: {region}."
+            messages.append(message)
     
     return "\n".join(messages)
