@@ -51,10 +51,11 @@ def parse_air_alarm_data(data):
         for active_alert in active_alerts:
             type = active_alert.get("type")
             translated_type = ALERT_TYPES_TRANSLATIONS.get(type, type)
+            translated_type = translated_type.replace('.', '\\.')
             if type == "AIR":
-                message = f"🔴 **{translated_type}** в регионе: {region}."
+                message = f"🔴 *{translated_type}* в регионе: {region}."
             else:
-                message = f"⚠️ **{translated_type}** в регионе: {region}."
+                message = f"⚠️ *{translated_type}* в регионе: {region}."
             messages.append(message)
     
     return "\n".join(messages)
