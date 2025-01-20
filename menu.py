@@ -6,6 +6,7 @@ from currency import get_currency_rate
 from utils import request_city
 from user_data import load_user_data, save_user_data
 from message_utils import send_message_with_retries
+from air_alarm import request_air_alarm  # Добавляем импорт
 
 logger = logging.getLogger(__name__)
 
