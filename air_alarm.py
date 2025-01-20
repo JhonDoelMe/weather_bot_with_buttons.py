@@ -13,7 +13,8 @@ logger = logging.getLogger(__name__)
 
 def get_air_alarm_status():
     headers = {
-        "Authorization": f"Bearer {API_KEY}"
+        "accept": "application/json",
+        "Authorization": API_KEY  # Используем ключ без 'Bearer'
     }
     response = requests.get(API_URL, headers=headers)
     if response.status_code == 200:
