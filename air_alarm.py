@@ -30,4 +30,4 @@ def parse_air_alarm_data(data):
             message = f"✅ Воздушная тревога снята в регионе: {region}."
         messages.append(message)
     
-    return "\n.join(messages)
+    return "\n".join(messages)  # Исправлено: добавлена закрывающая кавычка
