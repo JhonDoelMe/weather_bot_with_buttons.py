@@ -5,11 +5,11 @@ from config import TELEGRAM_TOKEN
 from user_data import save_user_data, load_user_data
 from menu import show_menu, button
 from message_utils import send_message_with_retries
-from notifications import send_notification
-from weather import get_weather  # Добавляем импорт get_weather
+from air_alarm import get_air_alarm_status  # Импортируем функцию для получения статуса воздушной тревоги
+from weather import get_weather
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Исправлена опечатка в 'levellevel'
+    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
@@ -37,7 +37,7 @@ async def start(update: Update, context):
 async def save_city(update: Update, context):
     if context.user_data.get('waiting_for_city'):
         city = update.message.text
-        if city.lower() in ['погода', 'курс гривны', 'изменить город']:  # Добавим проверку на текст кнопок
+        if city.lower() in ['погода', 'курс гривны', 'изменить город']:
             await send_message_with_retries(context.bot, update.effective_chat.id, "Некорректный ввод. Пожалуйста, введите название города:")
             return
         
@@ -50,7 +50,7 @@ async def save_city(update: Update, context):
         await show_menu(update, context)
     elif context.user_data.get('waiting_for_new_city'):
         new_city = update.message.text
-        if new_city.lower() in ['погода', 'курс гривны', 'изменить город']:  # Добавим проверку на текст кнопок
+        if new_city.lower() in ['погода', 'курс гривны', 'изменить город']:
             await send_message_with_retries(context.bot, update.effective_chat.id, "Некорректный ввод. Пожалуйста, введите название нового города:")
             return
 
@@ -63,6 +63,13 @@ async def save_city(update: Update, context):
         await show_menu(update, context)
     else:
         await button(update, context)
+
+async def request_air_alarm(update: Update, context):
+    alarm_status = get_air_alarm_status()
+    if alarm_status:
+        await send_message_with_retries(context.bot, update.effective_chat.id, alarm_status)
+    else:
+        await send_message_with_retries(context.bot, update.effective_chat.id, "Не удалось получить данные о воздушных тревогах.")
 
 def main():
     logger.info("Запуск бота...")
