@@ -1,6 +1,6 @@
 import logging
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, CallbackContext
 from config import TELEGRAM_TOKEN
 from user_data import save_user_data, load_user_data
 from message_utils import send_message_with_retries
