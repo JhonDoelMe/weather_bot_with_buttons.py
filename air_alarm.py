@@ -21,6 +21,10 @@ ALERT_TYPES_TRANSLATIONS = {
     "OTHER": "Другая тревога"
 }
 
+def escape_markdown(text):
+    escape_chars = r'\_*[]()~`>#+-=|{}.!'
+    return ''.join(f'\\{char}' if char in escape_chars else char for char in text)
+
 def get_air_alarm_status():
     headers = {
         "accept": "application/json",
@@ -46,12 +50,12 @@ def parse_air_alarm_data(data):
     
     messages = []
     for alert in alerts:
-        region = alert.get("regionName")  # Используем 'regionName' для получения названия региона
+        region = escape_markdown(alert.get("regionName"))  # Используем 'regionName' для получения названия региона и экранируем
         active_alerts = alert.get("activeAlerts", [])
         for active_alert in active_alerts:
             type = active_alert.get("type")
             translated_type = ALERT_TYPES_TRANSLATIONS.get(type, type)
-            translated_type = translated_type.replace('.', '\\.')
+            translated_type = escape_markdown(translated_type)
             if type == "AIR":
                 message = f"🔴 *{translated_type}* в регионе: {region}."
             else:
