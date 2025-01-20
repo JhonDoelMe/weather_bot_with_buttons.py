@@ -14,6 +14,8 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+INVALID_CITY_NAMES = ['погода', 'курс гривны', 'изменить город', 'Тревога']
+
 async def start(update: Update, context):
     try:
         user_id = update.effective_user.id
@@ -40,7 +42,7 @@ async def start(update: Update, context):
 async def save_city(update: Update, context):
     if context.user_data.get('waiting_for_city'):
         city = update.message.text
-        if city.lower() in ['погода', 'курс гривны', 'изменить город']:
+        if city.lower() in INVALID_CITY_NAMES:
             await send_message_with_retries(context.bot, update.effective_chat.id, "Некорректный ввод. Пожалуйста, введите название города:")
             return
         
@@ -56,7 +58,7 @@ async def save_city(update: Update, context):
         await show_menu(update, context)
     elif context.user_data.get('waiting_for_new_city'):
         new_city = update.message.text
-        if new_city.lower() in ['погода', 'курс гривны', 'изменить город']:
+        if new_city.lower() in INVALID_CITY_NAMES:
             await send_message_with_retries(context.bot, update.effective_chat.id, "Некорректный ввод. Пожалуйста, введите название нового города:")
             return
 
