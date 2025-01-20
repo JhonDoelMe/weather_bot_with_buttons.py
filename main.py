@@ -9,7 +9,7 @@ from notifications import send_notification
 from weather import get_weather  # Добавляем импорт get_weather
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',  # Исправлена опечатка в 'levellevel'
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Исправлена опечатка в 'levellevel'
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
