@@ -57,15 +57,18 @@ async def get_city_info(city):
 async def update_cities_json(city, region):
     """Добавляет новый город и регион в JSON-файл."""
     try:
-        with open(CITIES_TO_REGIONS_FILE, 'r', encoding='utf-8') as file:
-            cities_to_regions = json.load(file)
-    except FileNotFoundError:
-        cities_to_regions = {}
+        if os.path.exists(CITIES_TO_REGIONS_FILE):
+            with open(CITIES_TO_REGIONS_FILE, 'r', encoding='utf-8') as file:
+                cities_to_regions = json.load(file)
+        else:
+            cities_to_regions = {}
 
-    cities_to_regions[city] = region
+        cities_to_regions[city] = region
 
-    with open(CITIES_TO_REGIONS_FILE, 'w', encoding='utf-8') as file:
-        json.dump(cities_to_regions, file, ensure_ascii=False, indent=4)
+        with open(CITIES_TO_REGIONS_FILE, 'w', encoding='utf-8') as file:
+            json.dump(cities_to_regions, file, ensure_ascii=False, indent=4)
+    except Exception as e:
+        logger.error(f"Ошибка при обновлении файла {CITIES_TO_REGIONS_FILE}: {e}")
 
 async def get_or_fetch_region(city):
     """Возвращает регион для города, обновляя JSON-файл при необходимости."""
