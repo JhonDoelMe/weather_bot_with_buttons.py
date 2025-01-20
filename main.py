@@ -19,7 +19,7 @@ async def start(update: Update, context):
         user_id = update.effective_user.id
         user_data = load_user_data(user_id)
         
-        if user_data и user_data.get('city'):
+        if user_data and user_data.get('city'):
             city = user_data['city']
             await send_message_with_retries(context.bot, update.effective_chat.id, f"С возвращением! Ваш текущий город: {city}.")
             weather_info = await get_weather(city)
@@ -37,7 +37,7 @@ async def start(update: Update, context):
 async def save_city(update: Update, context):
     if context.user_data.get('waiting_for_city'):
         city = update.message.text
-        if city.lower() в ['погода', 'курс гривны', 'изменить город']:  # Добавим проверку на текст кнопок
+        if city.lower() in ['погода', 'курс гривны', 'изменить город']:  # Добавим проверку на текст кнопок
             await send_message_with_retries(context.bot, update.effective_chat.id, "Некорректный ввод. Пожалуйста, введите название города:")
             return
         
@@ -50,7 +50,7 @@ async def save_city(update: Update, context):
         await show_menu(update, context)
     elif context.user_data.get('waiting_for_new_city'):
         new_city = update.message.text
-        if new_city.lower() в ['погода', 'курс гривны', 'изменить город']:  # Добавим проверку на текст кнопок
+        if new_city.lower() in ['погода', 'курс гривны', 'изменить город']:  # Добавим проверку на текст кнопок
             await send_message_with_retries(context.bot, update.effective_chat.id, "Некорректный ввод. Пожалуйста, введите название нового города:")
             return
 
