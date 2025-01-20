@@ -39,6 +39,10 @@ def get_weather_emoji(description):
             return weather_emojis[key]
     return ""
 
+def escape_markdown_v2(text):
+    escape_chars = r'\_*[]()~`>#+-=|{}.!'
+    return ''.join(f'\\{char}' if char in escape_chars else char for char in text)
+
 def convert_unix_to_time(unix_time, timezone):
     return datetime.utcfromtimestamp(unix_time + timezone).strftime('%H:%M:%S (%d %B %Y)')
 
@@ -59,7 +63,7 @@ async def get_weather(city):
         logger.info(f"Погода для города {city} взята из кэша.")
         return weather_cache[city]
 
-    url = f"http://api.openweathermap.org/data/2.5/weather?q={city}&appid={WEATHER_API_KEY}&units=metric&lang=ru"
+    url = f"http://api.openweathermap.org/data/2.5/weather?q={escape_markdown_v2(city)}&appid={WEATHER_API_KEY}&units=metric&lang=ru"
     logger.info(f"Отправка запроса на URL: {url}")
 
     try:
@@ -97,25 +101,25 @@ async def get_weather(city):
                     timezone_hours = timezone // 3600
 
                     weather_info = (
-                        f"Погода в {city}:\n"
-                        f"Описание: {weather} {weather_emoji}\n"
-                        f"Температура: {temp}°C 🌡️\n"
-                        f"Ощущается как: {feels_like}°C 🌡️\n"
-                        f"Минимальная температура: {temp_min}°C 🌡️\n"
-                        f"Максимальная температура: {temp_max}°C 🌡️\n"
-                        f"Влажность: {humidity}% 💧\n"
-                        f"Давление: {pressure} hPa 🌬️\n"
-                        f"Давление на уровне моря: {sea_level} hPa\n"
-                        f"Давление на уровне земли: {grnd_level} hPa\n"
-                        f"Видимость: {visibility} м\n"
-                        f"Скорость ветра: {wind_speed} м/с 💨\n"
-                        f"Направление ветра: {wind_direction} ({wind_deg}°) 🧭\n"
-                        f"Порывы ветра: {wind_gust} м/с 🌪️\n"
-                        f"Облачность: {clouds}% ☁️\n"
-                        f"Время данных: {time_dt}\n"
-                        f"Время восхода: {time_sunrise} 🌅\n"
-                        f"Время заката: {time_sunset} 🌇\n"
-                        f"Часовой пояс: UTC{timezone_hours:+}\n"
+                        f"*Погода в {escape_markdown_v2(city)}:*\n"
+                        f"*Описание*: {weather} {weather_emoji}\n"
+                        f"*Температура*: {temp}°C 🌡️\n"
+                        f"*Ощущается как*: {feels_like}°C 🌡️\n"
+                        f"*Минимальная температура*: {temp_min}°C 🌡️\n"
+                        f"*Максимальная температура*: {temp_max}°C 🌡️\n"
+                        f"*Влажность*: {humidity}% 💧\n"
+                        f"*Давление*: {pressure} hPa 🌬️\n"
+                        f"*Давление на уровне моря*: {sea_level} hPa\n"
+                        f"*Давление на уровне земли*: {grnd_level} hPa\n"
+                        f"*Видимость*: {visibility} м\n"
+                        f"*Скорость ветра*: {wind_speed} м/с 💨\n"
+                        f"*Направление ветра*: {wind_direction} ({wind_deg}°) 🧭\n"
+                        f"*Порывы ветра*: {wind_gust} м/с 🌪️\n"
+                        f"*Облачность*: {clouds}% ☁️\n"
+                        f"*Время данных*: {time_dt}\n"
+                        f"*Время восхода*: {time_sunrise} 🌅\n"
+                        f"*Время заката*: {time_sunset} 🌇\n"
+                        f"*Часовой пояс*: UTC{timezone_hours:+}\n"
                         f"😃"
                     )
                     weather_cache[city] = weather_info
