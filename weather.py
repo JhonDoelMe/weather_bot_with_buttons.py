@@ -31,7 +31,7 @@ wind_directions = [
     "западный", "западно-северо-западный", "северо-западный", "северо-северо-западный"
 ]
 
-weather_cache = TTLCache(maxsize=100, ttl=600)
+weather_cache = TTLCache(maxsize=500, ttl=600)  # Увеличен размер кэша
 
 def get_weather_emoji(description):
     for key in weather_emojis:
@@ -40,13 +40,15 @@ def get_weather_emoji(description):
     return ""
 
 def escape_markdown_v2(text):
-    escape_chars = r'\_*[]()~`>#+-=|{}.!'
+    escape_chars = r'\_*[]()~`>#+-=|{}.!\\'  # Добавлено экранирование для обратного слэша
     return ''.join(f'\\{char}' if char in escape_chars else char for char in text)
 
 def convert_unix_to_time(unix_time, timezone):
     return datetime.utcfromtimestamp(unix_time + timezone).strftime('%H:%M:%S (%d %B %Y)')
 
 def get_wind_direction(deg):
+    if deg is None:
+        return "N/A"
     index = round(deg / 22.5) % 16
     return wind_directions[index]
 
@@ -72,63 +74,67 @@ async def get_weather(city):
                 logger.info(f"Получен ответ с кодом состояния: {response.status}")
                 if response.status == 200:
                     data = await response.json()
-                    logger.info(f"Получены данные: {data}")
+                    logger.info(f"Получены данные о погоде для города {city}")
 
-                    weather = escape_markdown_v2(data['weather'][0]['description'])
-                    temp = data['main']['temp']
-                    feels_like = data['main']['feels_like']
-                    humidity = data['main']['humidity']
-                    pressure = data['main']['pressure']
-                    temp_min = data['main']['temp_min']
-                    temp_max = data['main']['temp_max']
-                    sea_level = data['main'].get('sea_level', 'N/A')
-                    grnd_level = data['main'].get('grnd_level', 'N/A')
+                    weather = data.get('weather', [{}])[0].get('description', 'N/A')
+                    temp = data.get('main', {}).get('temp', 'N/A')
+                    feels_like = data.get('main', {}).get('feels_like', 'N/A')
+                    humidity = data.get('main', {}).get('humidity', 'N/A')
+                    pressure = data.get('main', {}).get('pressure', 'N/A')
+                    temp_min = data.get('main', {}).get('temp_min', 'N/A')
+                    temp_max = data.get('main', {}).get('temp_max', 'N/A')
+                    sea_level = data.get('main', {}).get('sea_level', 'N/A')
+                    grnd_level = data.get('main', {}).get('grnd_level', 'N/A')
                     visibility = data.get('visibility', 'N/A')
-                    wind_speed = data['wind']['speed']
-                    wind_deg = data['wind']['deg']
-                    wind_gust = data['wind'].get('gust', 'N/A')
-                    clouds = data['clouds']['all']
-                    dt = data['dt']
-                    sunrise = data['sys']['sunrise']
-                    sunset = data['sys']['sunset']
-                    timezone = data['timezone']
+                    wind_speed = data.get('wind', {}).get('speed', 'N/A')
+                    wind_deg = data.get('wind', {}).get('deg', 'N/A')
+                    wind_gust = data.get('wind', {}).get('gust', 'N/A')
+                    clouds = data.get('clouds', {}).get('all', 'N/A')
+                    dt = data.get('dt', 'N/A')
+                    sunrise = data.get('sys', {}).get('sunrise', 'N/A')
+                    sunset = data.get('sys', {}).get('sunset', 'N/A')
+                    timezone = data.get('timezone', 0)
 
                     weather_emoji = get_weather_emoji(weather)
-                    wind_direction = escape_markdown_v2(get_wind_direction(wind_deg))
-                    time_dt = convert_unix_to_time(dt, timezone)
-                    time_sunrise = convert_unix_to_time(sunrise, timezone)
-                    time_sunset = convert_unix_to_time(sunset, timezone)
-                    timezone_hours = timezone // 3600
+                    wind_direction = get_wind_direction(wind_deg)
+                    time_dt = convert_unix_to_time(dt, timezone) if dt != 'N/A' else 'N/A'
+                    time_sunrise = convert_unix_to_time(sunrise, timezone) if sunrise != 'N/A' else 'N/A'
+                    time_sunset = convert_unix_to_time(sunset, timezone) if sunset != 'N/A' else 'N/A'
+                    timezone_hours = timezone / 3600  # Учитываем дробные временные зоны
 
                     weather_info = (
-                        f"*Погода в {escape_markdown_v2(city)}:*\n"
-                        f"*Описание*: {weather} {weather_emoji}\n"
-                        f"*Температура*: {temp}°C 🌡️\n"
-                        f"*Ощущается как*: {feels_like}°C 🌡️\n"
-                        f"*Минимальная температура*: {temp_min}°C 🌡️\n"
-                        f"*Максимальная температура*: {temp_max}°C 🌡️\n"
-                        f"*Влажность*: {humidity}% 💧\n"
-                        f"*Давление*: {pressure} hPa 🌬️\n"
-                        f"*Давление на уровне моря*: {sea_level} hPa\n"
-                        f"*Давление на уровне земли*: {grnd_level} hPa\n"
-                        f"*Видимость*: {visibility} м\n"
-                        f"*Скорость ветра*: {wind_speed} м/с 💨\n"
-                        f"*Направление ветра*: {wind_direction} ({wind_deg}°) 🧭\n"
-                        f"*Порывы ветра*: {wind_gust} м/с 🌪️\n"
-                        f"*Облачность*: {clouds}% ☁️\n"
-                        f"*Время данных*: {time_dt}\n"
-                        f"*Время восхода*: {time_sunrise} 🌅\n"
-                        f"*Время заката*: {time_sunset} 🌇\n"
-                        f"*Часовой пояс*: UTC{timezone_hours:+}\n"
+                        f"*Погода в {escape_markdown_v2(city)}:*\n\n"
+                        f"*Описание*: {weather} {weather_emoji}\n\n"
+                        f"*Температура*: *{temp}°C* 🌡️\n"
+                        f"*Ощущается как*: *{feels_like}°C* 🌡️\n"
+                        f"*Минимальная температура*: *{temp_min}°C* 🌡️\n"
+                        f"*Максимальная температура*: *{temp_max}°C* 🌡️\n\n"
+                        f"*Влажность*: *{humidity}%* 💧\n"
+                        f"*Давление*: *{pressure} hPa* 🌬️\n"
+                        f"*Давление на уровне моря*: *{sea_level if sea_level != 'N/A' else 'N/A'} hPa*\n"
+                        f"*Давление на уровне земли*: *{grnd_level if grnd_level != 'N/A' else 'N/A'} hPa*\n"
+                        f"*Видимость*: *{visibility} м*\n\n"
+                        f"*Скорость ветра*: *{wind_speed} м/с* 💨\n"
+                        f"*Направление ветра*: *{wind_direction}* ({wind_deg}°) 🧭\n"
+                        f"*Порывы ветра*: *{wind_gust if wind_gust != 'N/A' else 'N/A'} м/с* 🌪️\n\n"
+                        f"*Облачность*: *{clouds}%* ☁️\n\n"
+                        f"*Время данных*: *{time_dt}*\n"
+                        f"*Время восхода*: *{time_sunrise}* 🌅\n"
+                        f"*Время заката*: *{time_sunset}* 🌇\n"
+                        f"*Часовой пояс*: *UTC{timezone_hours:+}*\n\n"
                         f"😃"
                     )
+
                     weather_cache[city] = weather_info
                     return weather_info
                 elif response.status == 404:
                     logger.warning("Город не найден. Проверьте правильность ввода.")
                     return "Город не найден. Проверьте правильность ввода."
+                elif response.status == 429:
+                    logger.warning("Превышен лимит запросов к API.")
+                    return "Превышен лимит запросов. Попробуйте снова позже."
                 else:
-                    logger.error("Не удалось получить данные о погоде.")
+                    logger.error(f"Не удалось получить данные о погоде. Код состояния: {response.status}")
                     return "Не удалось получить данные о погоде."
     except (asyncio.TimeoutError, ClientError, ServerTimeoutError, aiohttp.ClientConnectorError, aiohttp.ContentTypeError) as e:
         logger.error(f"Ошибка при получении данных о погоде: {e}")
@@ -139,16 +145,19 @@ async def get_weather_update(update: Update, context: CallbackContext):
         query = update
         user_id = query.from_user.id
         chat_id = query.message.chat_id
-        city = context.user_data.get('city', 'Неизвестно')
+        city = context.user_data.get('city')
+        if not city:
+            await request_city(update, context)
+            return
     else:
         user_data = load_user_data(update.effective_user.id)
         city = user_data.get('city') if user_data else None
 
-        if city:
-            weather_info = await get_weather(city)
-            await send_message_with_retries(context.bot, update.effective_chat.id, weather_info, parse_mode="MarkdownV2")
-        else:
-            await request_city(update, context)
+    if city:
+        weather_info = await get_weather(city)
+        await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
+    else:
+        await request_city(update, context)
 
 async def send_weather_update(context: CallbackContext):
     job = context.job
@@ -156,4 +165,4 @@ async def send_weather_update(context: CallbackContext):
     chat_id = job.data['chat_id']
     weather_info = await get_weather(city)
     bot = context.bot
-    await send_message_with_retries(bot, chat_id, weather_info, parse_mode="MarkdownV2")
+    await send_message_with_retries(bot, chat_id, weather_info)
