@@ -9,7 +9,7 @@ from air_alarm import get_air_alarm_status  # Импортируем функц�
 from weather import get_weather
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levellevel)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Исправлена опечатка
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
