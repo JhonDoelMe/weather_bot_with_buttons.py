@@ -9,7 +9,7 @@ from weather import get_weather
 from menu import show_menu, button, change_city, request_air_alarm  # Импортируем функции из модуля меню
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    format='%(asctime)s - %(name)s - %(levelname=s - %(message=s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
