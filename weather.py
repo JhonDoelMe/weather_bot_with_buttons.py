@@ -85,7 +85,6 @@ async def get_weather(city):
                     wind_gust = data['wind'].get('gust')
                     clouds = data['clouds']['all']
                     dt = data['dt']
-                    sys_country = data['sys']['country']
                     sunrise = data['sys']['sunrise']
                     sunset = data['sys']['sunset']
                     timezone = data['timezone']
@@ -114,7 +113,6 @@ async def get_weather(city):
                         f"Порывы ветра: {wind_gust} м/с 🌪️\n"
                         f"Облачность: {clouds}% ☁️\n"
                         f"Время данных: {time_dt}\n"
-                        f"Код страны: {sys_country}\n"
                         f"Время восхода: {time_sunrise} 🌅\n"
                         f"Время заката: {time_sunset} 🌇\n"
                         f"Часовой пояс: UTC{timezone_hours:+}\n"
