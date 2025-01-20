@@ -19,13 +19,18 @@ def get_air_alarm_status():
     response = requests.get(API_URL, headers=headers)
     if response.status_code == 200:
         data = response.json()
+        logger.info(f"Полученные данные: {data}")  # Добавлено логирование полученных данных
         return parse_air_alarm_data(data)
     else:
         logger.error(f"Ошибка при запросе данных: {response.status_code} - {response.text}")
         return "Не удалось получить данные о воздушных тревогах."
 
 def parse_air_alarm_data(data):
-    alerts = data.get("alerts", [])
+    if isinstance(data, list):
+        alerts = data
+    else:
+        alerts = data.get("alerts", [])
+    
     if not alerts:
         return "Воздушных тревог нет."
     
