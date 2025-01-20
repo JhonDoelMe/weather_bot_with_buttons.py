@@ -74,19 +74,19 @@ async def get_weather(city):
                     data = await response.json()
                     logger.info(f"Получены данные: {data}")
 
-                    weather = data['weather'][0]['description']
+                    weather = escape_markdown_v2(data['weather'][0]['description'])
                     temp = data['main']['temp']
                     feels_like = data['main']['feels_like']
                     humidity = data['main']['humidity']
                     pressure = data['main']['pressure']
                     temp_min = data['main']['temp_min']
                     temp_max = data['main']['temp_max']
-                    sea_level = data['main'].get('sea_level')
-                    grnd_level = data['main'].get('grnd_level')
+                    sea_level = data['main'].get('sea_level', 'N/A')
+                    grnd_level = data['main'].get('grnd_level', 'N/A')
                     visibility = data.get('visibility', 'N/A')
                     wind_speed = data['wind']['speed']
                     wind_deg = data['wind']['deg']
-                    wind_gust = data['wind'].get('gust')
+                    wind_gust = data['wind'].get('gust', 'N/A')
                     clouds = data['clouds']['all']
                     dt = data['dt']
                     sunrise = data['sys']['sunrise']
@@ -94,7 +94,7 @@ async def get_weather(city):
                     timezone = data['timezone']
 
                     weather_emoji = get_weather_emoji(weather)
-                    wind_direction = get_wind_direction(wind_deg)
+                    wind_direction = escape_markdown_v2(get_wind_direction(wind_deg))
                     time_dt = convert_unix_to_time(dt, timezone)
                     time_sunrise = convert_unix_to_time(sunrise, timezone)
                     time_sunset = convert_unix_to_time(sunset, timezone)
@@ -102,7 +102,7 @@ async def get_weather(city):
 
                     weather_info = (
                         f"*Погода в {escape_markdown_v2(city)}:*\n"
-                        f"*Описание*: {escape_markdown_v2(weather)} {weather_emoji}\n"
+                        f"*Описание*: {weather} {weather_emoji}\n"
                         f"*Температура*: {temp}°C 🌡️\n"
                         f"*Ощущается как*: {feels_like}°C 🌡️\n"
                         f"*Минимальная температура*: {temp_min}°C 🌡️\n"
@@ -113,7 +113,7 @@ async def get_weather(city):
                         f"*Давление на уровне земли*: {grnd_level} hPa\n"
                         f"*Видимость*: {visibility} м\n"
                         f"*Скорость ветра*: {wind_speed} м/с 💨\n"
-                        f"*Направление ветра*: {escape_markdown_v2(wind_direction)} ({wind_deg}°) 🧭\n"
+                        f"*Направление ветра*: {wind_direction} ({wind_deg}°) 🧭\n"
                         f"*Порывы ветра*: {wind_gust} м/с 🌪️\n"
                         f"*Облачность*: {clouds}% ☁️\n"
                         f"*Время данных*: {time_dt}\n"
@@ -146,7 +146,7 @@ async def get_weather_update(update: Update, context: CallbackContext):
 
         if city:
             weather_info = await get_weather(city)
-            await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
+            await send_message_with_retries(context.bot, update.effective_chat.id, weather_info, parse_mode="MarkdownV2")
         else:
             await request_city(update, context)
 
@@ -156,4 +156,4 @@ async def send_weather_update(context: CallbackContext):
     chat_id = job.data['chat_id']
     weather_info = await get_weather(city)
     bot = context.bot
-    await send_message_with_retries(bot, chat_id, weather_info)
+    await send_message_with_retries(bot, chat_id, weather_info, parse_mode="MarkdownV2")
