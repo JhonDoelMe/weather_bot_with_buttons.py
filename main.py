@@ -2,11 +2,12 @@ import logging
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 from config import TELEGRAM_TOKEN
-from user_data import save_user_data, load_user_data
+from user_data import save_user_data, load_user_data, subscribe_user, unsubscribe_user
 from message_utils import send_message_with_retries
 from air_alarm import get_or_fetch_region, parse_air_alarm_data
 from weather import get_weather
 from menu import show_menu
+from notifications import schedule_air_alarm_check
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -71,7 +72,9 @@ def main():
     application.add_handler(CommandHandler("start", start))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, save_city))
 
-    # Запуск бота
+    # Запускаем периодическую проверку тревог
+    application.job_queue.run_repeating(check_air_alerts, interval=300, first=10)
+
     application.run_polling()
 
 if __name__ == "__main__":
