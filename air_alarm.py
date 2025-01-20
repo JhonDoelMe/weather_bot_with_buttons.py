@@ -2,12 +2,30 @@ import json
 import os
 import logging
 import aiohttp
-from config import WEATHER_API_KEY
+import requests
+from config import WEATHER_API_KEY, UKRAINE_ALARM_API_KEY
+from dotenv import load_dotenv
+
+load_dotenv()  # Загружаем переменные окружения из .env файла
 
 logger = logging.getLogger(__name__)
 
 # Путь к файлу с городами и регионами
 CITIES_TO_REGIONS_FILE = 'cities_to_regions.json'
+
+# API для получения данных о тревогах
+API_URL = "https://api.ukrainealarm.com/api/v3/alerts"
+API_KEY = UKRAINE_ALARM_API_KEY
+
+ALERT_TYPES_TRANSLATIONS = {
+    "AIR": "Воздушная тревога",
+    "ARTILLERY": "Артиллерийская тревога",
+    "URBAN_FIGHTS": "Городские бои",
+    "MISSILE": "Ракетная тревога",
+    "NUCLEAR": "Ядерная тревога",
+    "CHEMICAL": "Химическая тревога",
+    "OTHER": "Другая тревога"
+}
 
 def load_cities_to_regions():
     """Загружает словарь городов и регионов из JSON-файла."""
@@ -62,6 +80,25 @@ async def get_or_fetch_region(city):
         await update_cities_json(city, region)
         return region
     else:
+        return None
+
+def get_air_alarm_status():
+    """Получает данные о воздушных тревогах через API."""
+    headers = {
+        "accept": "application/json",
+        "Authorization": API_KEY  # Используем ключ без 'Bearer'
+    }
+    try:
+        response = requests.get(API_URL, headers=headers, timeout=10)
+        if response.status_code == 200:
+            data = response.json()
+            logger.info(f"Полученные данные: {data}")
+            return data
+        else:
+            logger.error(f"Ошибка при запросе данных: {response.status_code} - {response.text}")
+            return None
+    except (requests.Timeout, requests.ConnectionError, requests.RequestException) as e:
+        logger.error(f"Ошибка при запросе данных: {e}")
         return None
 
 def parse_air_alarm_data(data, city):

@@ -79,30 +79,44 @@ async def get_weather(city):
                     weather = data.get('weather', [{}])[0].get('description', 'N/A')
                     temp = data.get('main', {}).get('temp', 'N/A')
                     feels_like = data.get('main', {}).get('feels_like', 'N/A')
-                    temp_min = data.get('main', {}).get('temp_min', 'N/A')
-                    temp_max = data.get('main', {}).get('temp_max', 'N/A')
                     humidity = data.get('main', {}).get('humidity', 'N/A')
                     pressure = data.get('main', {}).get('pressure', 'N/A')
+                    temp_min = data.get('main', {}).get('temp_min', 'N/A')
+                    temp_max = data.get('main', {}).get('temp_max', 'N/A')
+                    sea_level = data.get('main', {}).get('sea_level', 'N/A')
+                    grnd_level = data.get('main', {}).get('grnd_level', 'N/A')
+                    visibility = data.get('visibility', 'N/A')
                     wind_speed = data.get('wind', {}).get('speed', 'N/A')
                     wind_deg = data.get('wind', {}).get('deg', 'N/A')
                     wind_gust = data.get('wind', {}).get('gust', 'N/A')
+                    clouds = data.get('clouds', {}).get('all', 'N/A')
+                    dt = data.get('dt', 'N/A')
                     sunrise = data.get('sys', {}).get('sunrise', 'N/A')
                     sunset = data.get('sys', {}).get('sunset', 'N/A')
+                    timezone = data.get('timezone', 0)
 
                     weather_emoji = get_weather_emoji(weather)
                     wind_direction = get_wind_direction(wind_deg)
-                    time_sunrise = convert_unix_to_time(sunrise, data.get('timezone', 0)) if sunrise != 'N/A' else 'N/A'
-                    time_sunset = convert_unix_to_time(sunset, data.get('timezone', 0)) if sunset != 'N/A' else 'N/A'
+                    time_dt = convert_unix_to_time(dt, timezone) if dt != 'N/A' else 'N/A'
+                    time_sunrise = convert_unix_to_time(sunrise, timezone) if sunrise != 'N/A' else 'N/A'
+                    time_sunset = convert_unix_to_time(sunset, timezone) if sunset != 'N/A' else 'N/A'
+                    timezone_hours = timezone / 3600
 
                     weather_info = (
                         f"Погода в {city}: {weather} {weather_emoji}\n\n"
                         f"🌡️ Температура: {temp}°C (ощущается как {feels_like}°C)\n"
                         f"🌡️ Минимум/Максимум: {temp_min}°C / {temp_max}°C\n\n"
                         f"💧 Влажность: {humidity}%\n"
-                        f"🌬️ Давление: {pressure} hPa\n\n"
-                        f"💨 Ветер: {wind_speed} м/с ({wind_direction}, порывы до {wind_gust} м/с)\n\n"
+                        f"🌬️ Давление: {pressure} hPa\n"
+                        f"🌊 Давление на уровне моря: {sea_level if sea_level != 'N/A' else 'N/A'} hPa\n"
+                        f"🌍 Давление на уровне земли: {grnd_level if grnd_level != 'N/A' else 'N/A'} hPa\n\n"
+                        f"👀 Видимость: {visibility} м\n\n"
+                        f"💨 Ветер: {wind_speed} м/с ({wind_direction}, порывы до {wind_gust if wind_gust != 'N/A' else 'N/A'} м/с)\n\n"
+                        f"☁️ Облачность: {clouds}%\n\n"
                         f"🌅 Восход: {time_sunrise.split(' ')[0]}\n"
-                        f"🌇 Закат: {time_sunset.split(' ')[0]}"
+                        f"🌇 Закат: {time_sunset.split(' ')[0]}\n"
+                        f"⏰ Время данных: {time_dt}\n"
+                        f"🌍 Часовой пояс: UTC{timezone_hours:+}"
                     )
 
                     weather_cache[city] = weather_info

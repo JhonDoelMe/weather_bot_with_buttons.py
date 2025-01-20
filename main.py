@@ -4,7 +4,7 @@ from telegram.ext import Application, CommandHandler, MessageHandler, filters, C
 from config import TELEGRAM_TOKEN
 from user_data import save_user_data, load_user_data, subscribe_user, unsubscribe_user
 from message_utils import send_message_with_retries
-from air_alarm import get_or_fetch_region, parse_air_alarm_data
+from air_alarm import get_or_fetch_region, parse_air_alarm_data, get_air_alarm_status
 from weather import get_weather
 from menu import show_menu
 from notifications import schedule_air_alarm_check

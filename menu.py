@@ -1,16 +1,16 @@
 import logging
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import CallbackContext
-from weather import get_weather_update, get_weather
-from currency import get_currency_rate
-from utils import request_city
-from user_data import load_user_data, save_user_data
+from user_data import load_user_data, subscribe_user, unsubscribe_user
 from message_utils import send_message_with_retries
 from air_alarm import get_air_alarm_status
+from weather import get_weather
+from utils import request_city
 
 logger = logging.getLogger(__name__)
 
 async def show_menu(update, context):
+    """Показывает меню с кнопками."""
     buttons = [
         [KeyboardButton('Погода'), KeyboardButton('Курс гривны')],
         [KeyboardButton('Изменить город')],
@@ -26,12 +26,13 @@ async def show_menu(update, context):
         logger.error(f"Ошибка при показе меню: {e}")
 
 async def button(update, context: CallbackContext):
+    """Обрабатывает нажатия на кнопки."""
     text = update.message.text
     logger.info(f"Нажата кнопка: {text}")
     try:
         if text == 'Погода':
             user_data = load_user_data(update.effective_user.id)
-            if user_data and user_data['city']:
+            if user_data and user_data.get('city'):
                 city = user_data['city']
                 weather_info = await get_weather(city)
                 await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
@@ -39,7 +40,8 @@ async def button(update, context: CallbackContext):
                 await send_message_with_retries(context.bot, update.effective_chat.id, "Город не установлен. Пожалуйста, введите название города:")
                 context.user_data['waiting_for_city'] = True
         elif text == 'Курс гривны':
-            await get_currency_rate(update, context)
+            # Здесь можно добавить логику для получения курса гривны
+            await send_message_with_retries(context.bot, update.effective_chat.id, "Функция курса гривны пока не реализована.")
         elif text == 'Изменить город':
             await change_city(update, context)
         elif text == 'Тревога':
@@ -48,12 +50,14 @@ async def button(update, context: CallbackContext):
         logger.error(f"Ошибка при обработке кнопки: {e}")
 
 async def request_air_alarm(update, context):
+    """Запрашивает статус воздушной тревоги."""
     alarm_status = get_air_alarm_status()
     await send_message_with_retries(context.bot, update.effective_chat.id, alarm_status, parse_mode='MarkdownV2')
 
 async def change_city(update, context: CallbackContext):
+    """Запрашивает у пользователя новый город."""
     user_data = load_user_data(update.effective_user.id)
-    if user_data and user_data['city']:
+    if user_data and user_data.get('city'):
         current_city = user_data['city']
         await send_message_with_retries(context.bot, update.effective_chat.id, f"Текущий город: {current_city}")
         await send_message_with_retries(context.bot, update.effective_chat.id, "Введите новый город:")
