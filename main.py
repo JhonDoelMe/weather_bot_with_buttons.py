@@ -1,6 +1,6 @@
 import logging
 from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
 from config import TELEGRAM_TOKEN
 from user_data import save_user_data, load_user_data
 from message_utils import send_message_with_retries
@@ -72,10 +72,6 @@ async def save_city(update: Update, context):
         await show_menu(update, context)
     else:
         await button(update, context)
-
-async def request_air_alarm(update: Update, context):
-    alarm_status = get_air_alarm_status()
-    await send_message_with_retries(context.bot, update.effective_chat.id, alarm_status)
 
 def main():
     logger.info("Запуск бота...")
