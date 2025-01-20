@@ -26,6 +26,9 @@ def load_user_data(user_id):
             return data.get(str(user_id))
         else:
             return None
+    except json.JSONDecodeError:
+        print("Ошибка при загрузке данных пользователя: файл поврежден или пуст.")
+        return None
     except Exception as e:
         print(f"Ошибка при загрузке данных пользователя: {e}")
         return None
