@@ -6,7 +6,7 @@ from currency import get_currency_rate
 from utils import request_city
 from user_data import load_user_data, save_user_data
 from message_utils import send_message_with_retries
-from air_alarm import request_air_alarm  # Добавляем импорт
+from air_alarm import get_air_alarm_status  # Изменен импорт
 
 logger = logging.getLogger(__name__)
 
@@ -46,6 +46,13 @@ async def button(update, context: CallbackContext):
             await request_air_alarm(update, context)
     except Exception as e:
         logger.error(f"Ошибка при обработке кнопки: {e}")
+
+async def request_air_alarm(update, context):
+    alarm_status = get_air_alarm_status()
+    if alarm_status:
+        await send_message_with_retries(context.bot, update.effective_chat.id, alarm_status)
+    else:
+        await send_message_with_retries(context.bot, update.effective_chat.id, "Не удалось получить данные о воздушных тревогах.")
 
 async def change_city(update, context: CallbackContext):
     user_data = load_user_data(update.effective_user.id)

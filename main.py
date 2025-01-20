@@ -6,7 +6,7 @@ from user_data import save_user_data, load_user_data
 from message_utils import send_message_with_retries
 from air_alarm import get_air_alarm_status  # Импортируем функцию для получения статуса воздушной тревоги
 from weather import get_weather
-from menu import show_menu, button, change_city  # Импортируем функции из модуля меню
+from menu import show_menu, button, change_city, request_air_alarm  # Импортируем функции из модуля меню
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
