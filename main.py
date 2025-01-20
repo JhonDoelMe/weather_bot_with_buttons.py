@@ -18,12 +18,15 @@ async def start(update: Update, context):
     try:
         user_id = update.effective_user.id
         user_data = load_user_data(user_id)
-        
+
         if user_data and user_data.get('city'):
             city = user_data['city']
             await send_message_with_retries(context.bot, update.effective_chat.id, f"С возвращением! Ваш текущий город: {city}.")
             weather_info = await get_weather(city)
-            await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
+            if weather_info:
+                await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
+            else:
+                logger.error("Не удалось получить данные о погоде.")
         else:
             save_user_data(user_id, city=None)
             await send_message_with_retries(context.bot, update.effective_chat.id, "Привет! Я бот для получения погоды и курса гривны. Пожалуйста, введите название города:")
@@ -46,7 +49,10 @@ async def save_city(update: Update, context):
         context.user_data['waiting_for_city'] = False
         await send_message_with_retries(context.bot, update.effective_chat.id, f"Город {city} сохранен для пользователя {user_id}.")
         weather_info = await get_weather(city)
-        await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
+        if weather_info:
+            await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
+        else:
+            logger.error("Не удалось получить данные о погоде.")
         await show_menu(update, context)
     elif context.user_data.get('waiting_for_new_city'):
         new_city = update.message.text
@@ -59,7 +65,10 @@ async def save_city(update: Update, context):
         context.user_data['waiting_for_new_city'] = False
         await send_message_with_retries(context.bot, update.effective_chat.id, f"Город успешно изменен на {new_city}.")
         weather_info = await get_weather(new_city)
-        await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
+        if weather_info:
+            await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
+        else:
+            logger.error("Не удалось получить данные о погоде.")
         await show_menu(update, context)
     else:
         await button(update, context)
