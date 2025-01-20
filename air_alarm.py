@@ -57,9 +57,9 @@ def parse_air_alarm_data(data):
             translated_type = ALERT_TYPES_TRANSLATIONS.get(type, type)
             translated_type = escape_markdown_v2(translated_type)
             if type == "AIR":
-                message = f"🔴 *{translated_type}* в регионе: {region}."
+                message = f"🔴 *{translated_type}* в регионе: {region}\\."
             else:
-                message = f"⚠️ *{translated_type}* в регионе: {region}."
+                message = f"⚠️ *{translated_type}* в регионе: {region}\\."
             messages.append(message)
     
     return "\n".join(messages)
