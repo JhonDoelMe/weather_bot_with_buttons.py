@@ -1,15 +1,15 @@
 import logging
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, CallbackQueryHandler
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackQueryHandler, CallbackContext
 from config import TELEGRAM_TOKEN
 from user_data import save_user_data, load_user_data
 from message_utils import send_message_with_retries
 from air_alarm import get_air_alarm_status  # Импортируем функцию для получения статуса воздушной тревоги
 from weather import get_weather
-from menu import show_menu, button  # Импортируем функции из модуля меню
+from menu import show_menu, button, change_city  # Импортируем функции из модуля меню
 
 logging.basicConfig(
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Исправлена опечатка
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
@@ -32,7 +32,7 @@ async def start(update: Update, context):
             await send_message_with_retries(context.bot, update.effective_chat.id, "Привет! Я бот для получения погоды и курса гривны. Пожалуйста, введите название города:")
             context.user_data['waiting_for_city'] = True
         
-        show_menu(update, context)
+        await show_menu(update, context)
     except Exception as e:
         logger.error(f"Ошибка в функции start: {e}")
         await send_message_with_retries(context.bot, update.effective_chat.id, "Произошла ошибка. Попробуйте снова позже.")
@@ -53,7 +53,7 @@ async def save_city(update: Update, context):
             await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
         else:
             logger.error("Не удалось получить данные о погоде.")
-        show_menu(update, context)
+        await show_menu(update, context)
     elif context.user_data.get('waiting_for_new_city'):
         new_city = update.message.text
         if new_city.lower() in ['погода', 'курс гривны', 'изменить город']:
@@ -69,7 +69,7 @@ async def save_city(update: Update, context):
             await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
         else:
             logger.error("Не удалось получить данные о погоде.")
-        show_menu(update, context)
+        await show_menu(update, context)
     else:
         await button(update, context)
 
