@@ -1,11 +1,12 @@
 import logging
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext
+from telegram.ext import Application, CommandHandler, MessageHandler, filters, CallbackContext, CallbackQueryHandler
 from config import TELEGRAM_TOKEN
 from user_data import save_user_data, load_user_data
 from message_utils import send_message_with_retries
 from air_alarm import get_air_alarm_status  # Импортируем функцию для получения статуса воздушной тревоги
 from weather import get_weather
+from menu import show_menu, button  # Импортируем функции из модуля меню
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',  # Исправлена опечатка
@@ -31,7 +32,7 @@ async def start(update: Update, context):
             await send_message_with_retries(context.bot, update.effective_chat.id, "Привет! Я бот для получения погоды и курса гривны. Пожалуйста, введите название города:")
             context.user_data['waiting_for_city'] = True
         
-        show_menu(update, context)  # Исправлено: убрал await
+        show_menu(update, context)
     except Exception as e:
         logger.error(f"Ошибка в функции start: {e}")
         await send_message_with_retries(context.bot, update.effective_chat.id, "Произошла ошибка. Попробуйте снова позже.")
@@ -52,7 +53,7 @@ async def save_city(update: Update, context):
             await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
         else:
             logger.error("Не удалось получить данные о погоде.")
-        show_menu(update, context)  # Исправлено: убрал await
+        show_menu(update, context)
     elif context.user_data.get('waiting_for_new_city'):
         new_city = update.message.text
         if new_city.lower() in ['погода', 'курс гривны', 'изменить город']:
@@ -68,7 +69,7 @@ async def save_city(update: Update, context):
             await send_message_with_retries(context.bot, update.effective_chat.id, weather_info)
         else:
             logger.error("Не удалось получить данные о погоде.")
-        show_menu(update, context)  # Исправлено: убрал await
+        show_menu(update, context)
     else:
         await button(update, context)
 
@@ -79,28 +80,6 @@ async def request_air_alarm(update: Update, context):
     else:
         await send_message_with_retries(context.bot, update.effective_chat.id, "Не удалось получить данные о воздушных тревогах.")
 
-def show_menu(update, context):
-    keyboard = [
-        [InlineKeyboardButton("Погода", callback_data='weather')],
-        [InlineKeyboardButton("Курс гривны", callback_data='currency')],
-        [InlineKeyboardButton("Изменить город", callback_data='change_city')],
-        [InlineKeyboardButton("Тревога", callback_data='air_alarm')]  # Добавлена новая кнопка "тревога"
-    ]
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    update.message.reply_text('Меню:', reply_markup=reply_markup)
-
-async def button(update, context):
-    query = update.callback_query
-    query.answer()
-    if query.data == 'weather':
-        await request_weather(update, context)
-    elif query.data == 'currency':
-        await request_currency(update, context)
-    elif query.data == 'change_city':
-        await request_city(update, context)
-    elif query.data == 'air_alarm':
-        await request_air_alarm(update, context)  # Добавлен обработчик для кнопки "тревога"
-
 def main():
     logger.info("Запуск бота...")
     application = Application.builder().token(TELEGRAM_TOKEN).build()
@@ -110,6 +89,9 @@ def main():
     
     logger.info("Добавление обработчика команды /menu")
     application.add_handler(CommandHandler("menu", show_menu))
+
+    logger.info("Добавление обработчика CallbackQuery")
+    application.add_handler(CallbackQueryHandler(button))  # Добавлен обработчик CallbackQuery
 
     logger.info("Добавление обработчика текстовых сообщений")
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, save_city))
