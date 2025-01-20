@@ -11,6 +11,16 @@ API_KEY = os.getenv("UKRAINE_ALARM_API_KEY")
 
 logger = logging.getLogger(__name__)
 
+ALERT_TYPES_TRANSLATIONS = {
+    "AIR": "Воздушная тревога",
+    "ARTILLERY": "Артиллерийская тревога",
+    "URBAN_FIGHTS": "Городские бои",
+    "MISSILE": "Ракетная тревога",
+    "NUCLEAR": "Ядерная тревога",
+    "CHEMICAL": "Химическая тревога",
+    "OTHER": "Другая тревога"
+}
+
 def get_air_alarm_status():
     headers = {
         "accept": "application/json",
@@ -40,10 +50,11 @@ def parse_air_alarm_data(data):
         active_alerts = alert.get("activeAlerts", [])
         for active_alert in active_alerts:
             type = active_alert.get("type")
+            translated_type = ALERT_TYPES_TRANSLATIONS.get(type, type)
             if type == "AIR":
-                message = f"🔴 Внимание! Воздушная тревога в регионе: {region}."
+                message = f"🔴 **{translated_type}** в регионе: {region}."
             else:
-                message = f"⚠️ Тревога '{type}' в регионе: {region}."
+                message = f"⚠️ **{translated_type}** в регионе: {region}."
             messages.append(message)
     
     return "\n".join(messages)
