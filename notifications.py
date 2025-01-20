@@ -33,7 +33,3 @@ async def check_air_alerts(context: CallbackContext):
                                     )
     except Exception as e:
         logger.error(f"Ошибка при проверке воздушных тревог: {e}")
-
-def schedule_air_alarm_check(context: CallbackContext):
-    """Настраивает периодическую проверку воздушных тревог."""
-    context.job_queue.run_repeating(check_air_alerts, interval=300, first=10)  # Проверка каждые 5 минут
