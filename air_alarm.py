@@ -2,6 +2,10 @@ import requests
 import os
 import logging
 
+from dotenv import load_dotenv
+
+load_dotenv()  # Загружаем переменные окружения из .env файла
+
 API_URL = "https://api.ukrainealarm.com/api/v3/alerts"
 API_KEY = os.getenv("UKRAINE_ALARM_API_KEY")
 
