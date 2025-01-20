@@ -75,10 +75,7 @@ async def save_city(update: Update, context):
 
 async def request_air_alarm(update: Update, context):
     alarm_status = get_air_alarm_status()
-    if alarm_status:
-        await send_message_with_retries(context.bot, update.effective_chat.id, alarm_status)
-    else:
-        await send_message_with_retries(context.bot, update.effective_chat.id, "Не удалось получить данные о воздушных тревогах.")
+    await send_message_with_retries(context.bot, update.effective_chat.id, alarm_status)
 
 def main():
     logger.info("Запуск бота...")

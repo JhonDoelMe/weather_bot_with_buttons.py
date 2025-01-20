@@ -1,8 +1,11 @@
 import requests
 import os
+import logging
 
-API_URL = "https://api.ukrainealarm.com/api/alerts"
+API_URL = "https://api.ukrainealarm.com/api/v3/alerts"
 API_KEY = os.getenv("UKRAINE_ALARM_API_KEY")
+
+logger = logging.getLogger(__name__)
 
 def get_air_alarm_status():
     headers = {
@@ -13,7 +16,8 @@ def get_air_alarm_status():
         data = response.json()
         return parse_air_alarm_data(data)
     else:
-        return None
+        logger.error(f"Ошибка при запросе данных: {response.status_code} - {response.text}")
+        return "Не удалось получить данные о воздушных тревогах."
 
 def parse_air_alarm_data(data):
     alerts = data.get("alerts", [])
