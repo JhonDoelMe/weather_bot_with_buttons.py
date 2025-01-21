@@ -3,7 +3,7 @@ from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 from telegram.ext import CallbackContext
 from user_data import load_user_data, subscribe_user, unsubscribe_user
 from message_utils import send_message_with_retries
-from air_alarm import get_air_alarm_status
+from air_alarm import get_air_alarm_status, parse_air_alarm_data
 from weather import get_weather
 from utils import request_city
 
@@ -55,9 +55,15 @@ async def button(update, context: CallbackContext):
 
 async def request_air_alarm(update, context):
     """Запрашивает статус воздушной тревоги."""
-    alarm_status = await get_air_alarm_status()
-    if alarm_status:
-        await send_message_with_retries(context.bot, update.effective_chat.id, alarm_status, parse_mode='MarkdownV2')
+    alarm_data = await get_air_alarm_status()
+    if alarm_data:
+        user_data = load_user_data(update.effective_user.id)
+        if user_data and user_data.get('city'):
+            city = user_data['city']
+            message = await parse_air_alarm_data(alarm_data, city)
+            await send_message_with_retries(context.bot, update.effective_chat.id, message, parse_mode='MarkdownV2')
+        else:
+            await send_message_with_retries(context.bot, update.effective_chat.id, "Город не установлен. Пожалуйста, введите название города.")
     else:
         await send_message_with_retries(context.bot, update.effective_chat.id, "Не удалось получить данные о тревогах.")
 

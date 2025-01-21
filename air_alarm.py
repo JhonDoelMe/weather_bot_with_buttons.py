@@ -104,6 +104,11 @@ async def get_air_alarm_status():
         logger.error(f"Ошибка при запросе данных: {e}")
         return None
 
+def escape_markdown_v2(text):
+    """Экранирует специальные символы для MarkdownV2."""
+    escape_chars = r'\_*[]()~`>#+-=|{}.!'
+    return ''.join(f'\\{char}' if char in escape_chars else char for char in text)
+
 async def parse_air_alarm_data(data, city):
     """Парсит данные о тревогах и возвращает сообщение для пользователя."""
     region = await get_or_fetch_region(city)
@@ -114,7 +119,9 @@ async def parse_air_alarm_data(data, city):
         if alert.get("regionName") == region:
             active_alerts = alert.get("activeAlerts", [])
             if active_alerts:
-                return f"🔴 Внимание! В вашем городе {city} объявлена воздушная тревога!"
+                # Экранируем специальные символы в сообщении
+                message = escape_markdown_v2(f"🔴 Внимание! В вашем городе {city} объявлена воздушная тревога!")
+                return message
             else:
                 return f"В вашем городе {city} тревог нет."
     return f"Данные для региона {region} не найдены."
