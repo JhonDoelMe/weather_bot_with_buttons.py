@@ -29,14 +29,18 @@ ALERT_TYPES_TRANSLATIONS = {
 def load_cities_to_regions():
     """Загружает словарь городов и регионов из JSON-файла."""
     try:
-        if os.path.exists(CITIES_TO_REGIONS_FILE):
+        if os.path.exists(CITIES_TO_REGIONS_FILE) and os.path.getsize(CITIES_TO_REGIONS_FILE) > 0:
             with open(CITIES_TO_REGIONS_FILE, 'r', encoding='utf-8') as file:
                 return json.load(file)
         else:
-            logger.error(f"Файл {CITIES_TO_REGIONS_FILE} не найден.")
+            logger.warning(f"Файл {CITIES_TO_REGIONS_FILE} не найден или пуст. Создаем новый файл.")
+            with open(CITIES_TO_REGIONS_FILE, 'w', encoding='utf-8') as file:
+                json.dump({}, file)  # Создаем пустой словарь
             return {}
     except json.JSONDecodeError:
-        logger.error(f"Ошибка при загрузке файла {CITIES_TO_REGIONS_FILE}: файл поврежден.")
+        logger.error(f"Ошибка при загрузке файла {CITIES_TO_REGIONS_FILE}: файл поврежден. Создаем новый файл.")
+        with open(CITIES_TO_REGIONS_FILE, 'w', encoding='utf-8') as file:
+            json.dump({}, file)  # Создаем пустой словарь
         return {}
     except Exception as e:
         logger.error(f"Ошибка при загрузке файла {CITIES_TO_REGIONS_FILE}: {e}")
@@ -56,12 +60,7 @@ async def get_city_info(city):
 async def update_cities_json(city, region):
     """Добавляет новый город и регион в JSON-файл."""
     try:
-        if os.path.exists(CITIES_TO_REGIONS_FILE):
-            with open(CITIES_TO_REGIONS_FILE, 'r', encoding='utf-8') as file:
-                cities_to_regions = json.load(file)
-        else:
-            cities_to_regions = {}
-
+        cities_to_regions = load_cities_to_regions()
         cities_to_regions[city] = region
 
         with open(CITIES_TO_REGIONS_FILE, 'w', encoding='utf-8') as file:
@@ -113,15 +112,14 @@ async def parse_air_alarm_data(data, city):
     """Парсит данные о тревогах и возвращает сообщение для пользователя."""
     region = await get_or_fetch_region(city)
     if not region:
-        return f"Город {city} не найден в списке регионов. Пожалуйста, введите другой город."
+        return escape_markdown_v2(f"Город {city} не найден в списке регионов. Пожалуйста, введите другой город.")
 
     for alert in data:
         if alert.get("regionName") == region:
             active_alerts = alert.get("activeAlerts", [])
             if active_alerts:
-                # Экранируем специальные символы в сообщении
                 message = escape_markdown_v2(f"🔴 Внимание! В вашем городе {city} объявлена воздушная тревога!")
                 return message
             else:
-                return f"В вашем городе {city} тревог нет."
-    return f"Данные для региона {region} не найдены."
+                return escape_markdown_v2(f"В вашем городе {city} тревог нет.")
+    return escape_markdown_v2(f"Данные для региона {region} не найдены.")
