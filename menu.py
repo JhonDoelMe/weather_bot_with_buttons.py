@@ -65,7 +65,7 @@ async def request_air_alarm(update, context):
         else:
             await send_message_with_retries(context.bot, update.effective_chat.id, "Город не установлен. Пожалуйста, введите название города.")
     else:
-        await send_message_with_retries(context.bot, update.effective_chat.id, "Не удалось получить данные о тревогах.")
+        await send_message_with_retries(context.bot, update.effective_chat.id, "Не удалось получить данные о тревогах. Проверьте настройки API.")
 
 async def change_city(update, context: CallbackContext):
     """Запрашивает у пользователя новый город."""

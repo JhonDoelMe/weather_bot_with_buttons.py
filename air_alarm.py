@@ -87,7 +87,7 @@ async def get_air_alarm_status():
     """Получает данные о воздушных тревогах через API."""
     headers = {
         "accept": "application/json",
-        "Authorization": API_KEY  # Используем ключ без 'Bearer'
+        "Authorization": f"Bearer {API_KEY}"  # Добавляем 'Bearer' перед ключом
     }
     try:
         async with aiohttp.ClientSession() as session:
