@@ -1,4 +1,5 @@
 import logging
+import json
 from telegram.ext import CallbackContext
 from user_data import load_user_data
 from air_alarm import get_air_alarm_status, get_or_fetch_region
@@ -10,11 +11,18 @@ async def check_air_alerts(context: CallbackContext):
     """Периодически проверяет статус воздушных тревог и отправляет уведомления."""
     try:
         # Получаем список всех пользователей
-        with open('user_data.json', 'r', encoding='utf-8') as file:
-            user_data = json.load(file)
+        try:
+            with open('user_data.json', 'r', encoding='utf-8') as file:
+                user_data = json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            logger.error(f"Ошибка при загрузке файла user_data.json: {e}")
+            return
 
         # Получаем данные о тревогах
-        alarm_data = get_air_alarm_status()
+        alarm_data = await get_air_alarm_status()
+        if not alarm_data:
+            logger.error("Не удалось получить данные о тревогах.")
+            return
 
         for user_id, data in user_data.items():
             if data.get('subscriptions', {}).get('air_alarm', False):

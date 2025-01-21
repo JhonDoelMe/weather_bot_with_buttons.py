@@ -34,6 +34,12 @@ async def get_currency_rate(query: CallbackQuery, context: CallbackContext):
                         await send_message_with_retries(context.bot, chat_id, "Не удалось получить курс гривны.")
                         return
 
+                    # Проверяем наличие всех необходимых ключей
+                    required_currencies = ['USD', 'EUR', 'GBP', 'JPY', 'RUB']
+                    if not all(currency in rates for currency in required_currencies):
+                        await send_message_with_retries(context.bot, chat_id, "Не удалось получить данные для всех валют.")
+                        return
+
                     message = (
                         f"Курс гривны (UAH):\n"
                         f"USD: {1 / rates['USD'] * uah_rate:.2f} {currency_emojis['USD']}\n"

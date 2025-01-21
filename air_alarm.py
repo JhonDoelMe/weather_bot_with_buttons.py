@@ -2,7 +2,6 @@ import json
 import os
 import logging
 import aiohttp
-import requests
 from config import WEATHER_API_KEY, UKRAINE_ALARM_API_KEY
 from dotenv import load_dotenv
 
@@ -85,28 +84,29 @@ async def get_or_fetch_region(city):
     else:
         return None
 
-def get_air_alarm_status():
+async def get_air_alarm_status():
     """Получает данные о воздушных тревогах через API."""
     headers = {
         "accept": "application/json",
         "Authorization": API_KEY  # Используем ключ без 'Bearer'
     }
     try:
-        response = requests.get(API_URL, headers=headers, timeout=10)
-        if response.status_code == 200:
-            data = response.json()
-            logger.info(f"Полученные данные: {data}")
-            return data
-        else:
-            logger.error(f"Ошибка при запросе данных: {response.status_code} - {response.text}")
-            return None
-    except (requests.Timeout, requests.ConnectionError, requests.RequestException) as e:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(API_URL, headers=headers, timeout=10) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    logger.info(f"Полученные данные: {data}")
+                    return data
+                else:
+                    logger.error(f"Ошибка при запросе данных: {response.status} - {await response.text()}")
+                    return None
+    except (aiohttp.ClientError, asyncio.TimeoutError) as e:
         logger.error(f"Ошибка при запросе данных: {e}")
         return None
 
-def parse_air_alarm_data(data, city):
+async def parse_air_alarm_data(data, city):
     """Парсит данные о тревогах и возвращает сообщение для пользователя."""
-    region = get_or_fetch_region(city)
+    region = await get_or_fetch_region(city)
     if not region:
         return f"Город {city} не найден в списке регионов. Пожалуйста, введите другой город."
 

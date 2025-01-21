@@ -41,7 +41,7 @@ async def start(update: Update, context: CallbackContext):
         await update.message.reply_text("Произошла ошибка. Попробуйте снова позже.")
 
 async def save_city(update: Update, context: CallbackContext):
-    if context.user_data.get('waiting_for_city'):
+    if context.user_data.get('waiting_for_city', False):
         city = update.message.text
         region = await get_or_fetch_region(city)
         

@@ -14,4 +14,5 @@ async def send_message_with_retries(bot, chat_id, text, parse_mode=None):
             if attempt < max_retries - 1:
                 await asyncio.sleep(2 ** attempt)
             else:
+                logger.error(f"Не удалось отправить сообщение после {max_retries} попыток.")
                 raise e

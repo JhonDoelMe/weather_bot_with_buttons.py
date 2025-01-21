@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 # Проверка наличия файла .env
 if not os.path.isfile('.env'):
     logger.error("Файл .env не найден. Убедитесь, что файл .env присутствует в корневой директории проекта.")
-    raise FileNotFoundError("Файл .env не найден.")
+    raise FileNotFoundError("Файл .env не найден. Создайте файл .env и добавьте необходимые переменные окружения.")
 
 # Загрузка переменных окружения
 load_dotenv()
