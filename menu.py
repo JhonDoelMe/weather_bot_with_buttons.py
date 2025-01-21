@@ -56,7 +56,10 @@ async def button(update, context: CallbackContext):
 async def request_air_alarm(update, context):
     """Запрашивает статус воздушной тревоги."""
     alarm_status = await get_air_alarm_status()
-    await send_message_with_retries(context.bot, update.effective_chat.id, alarm_status, parse_mode='MarkdownV2')
+    if alarm_status:
+        await send_message_with_retries(context.bot, update.effective_chat.id, alarm_status, parse_mode='MarkdownV2')
+    else:
+        await send_message_with_retries(context.bot, update.effective_chat.id, "Не удалось получить данные о тревогах.")
 
 async def change_city(update, context: CallbackContext):
     """Запрашивает у пользователя новый город."""

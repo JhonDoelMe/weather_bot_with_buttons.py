@@ -6,8 +6,8 @@ from user_data import save_user_data, load_user_data, subscribe_user, unsubscrib
 from message_utils import send_message_with_retries
 from air_alarm import get_air_alarm_status, get_or_fetch_region, parse_air_alarm_data
 from weather import get_weather
-from menu import show_menu
-from notifications import check_air_alerts  # Импортируем функцию check_air_alerts
+from menu import show_menu, button  # Импортируем функцию button
+from notifications import check_air_alerts
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -70,6 +70,7 @@ def main():
 
     # Добавляем обработчики команд
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, button))  # Обработчик для кнопок
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, save_city))
 
     # Запускаем периодическую проверку тревог
