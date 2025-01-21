@@ -27,6 +27,10 @@ async def show_menu(update, context):
 
 async def button(update, context: CallbackContext):
     """Обрабатывает нажатия на кнопки."""
+    if not update.message:
+        logger.error("Нет сообщения для обработки кнопки.")
+        return
+
     text = update.message.text
     logger.info(f"Нажата кнопка: {text}")
     try:
