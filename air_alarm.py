@@ -87,7 +87,7 @@ async def get_air_alarm_status():
     """Получает данные о воздушных тревогах через API."""
     headers = {
         "accept": "application/json",
-        "Authorization": f"Bearer {API_KEY}"  # Добавляем 'Bearer' перед ключом
+        "Authorization": f"APIKey {API_KEY}"  # Используем формат APIKey <ваш_ключ>
     }
     try:
         async with aiohttp.ClientSession() as session:
@@ -118,7 +118,8 @@ async def parse_air_alarm_data(data, city):
         if alert.get("regionName") == region:
             active_alerts = alert.get("activeAlerts", [])
             if active_alerts:
-                message = escape_markdown_v2(f"🔴 Внимание! В вашем городе {city} объявлена воздушная тревога!")
+                alert_types = [ALERT_TYPES_TRANSLATIONS.get(a.get("type"), "Неизвестная тревога") for a in active_alerts]
+                message = escape_markdown_v2(f"🔴 Внимание! В вашем городе {city} объявлены следующие тревоги: {', '.join(alert_types)}!")
                 return message
             else:
                 return escape_markdown_v2(f"В вашем городе {city} тревог нет.")
